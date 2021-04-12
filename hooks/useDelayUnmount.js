@@ -8,7 +8,6 @@ const useDelayUnmount = (isOpen, delay = 1000) => {
 
     if (isOpen) {
       setIsMounted(true);
-      if (timer) clearTimeout(timer);
     } else {
       timer = setTimeout(() => {
         setIsMounted(false);
