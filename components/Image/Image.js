@@ -5,23 +5,40 @@ const Image = ({ className, src, alt, lazy }) => {
   const imgRef = useRef();
 
   useEffect(() => {
-    if (!lazy) {
+    let observer;
+    const lazyAttributeSupport = 'loading' in HTMLImageElement.prototype;
+
+    if (!lazy || lazyAttributeSupport) {
       imgRef.current.src = imgRef.current.dataset.src;
-      return;
     }
 
-    if ('loading' in HTMLImageElement.prototype) {
-      imgRef.current.loading = 'lazy';
-      imgRef.current.src = imgRef.current.dataset.src;
+    if (lazy && !lazyAttributeSupport) {
+      const handleLazyLoad = (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src;
+          observer.disconnect();
+        }
+      };
+
+      observer = new IntersectionObserver(handleLazyLoad, {
+        rootMargin: '0px 0px 256px 0px',
+      });
+      observer.observe(imgRef.current);
     }
-    // if not support see _app.js
-  }, [lazy]);
+
+    return () => {
+      if (observer) observer.disconnect();
+    };
+  }, [lazy, src]);
 
   return (
     <img
-      className={`${className}${lazy && ' lazy'}`}
+      className={className}
       ref={imgRef}
       data-src={src}
+      loading={lazy ? 'lazy' : 'eager'}
       alt={alt}
     />
   );
@@ -30,7 +47,7 @@ const Image = ({ className, src, alt, lazy }) => {
 Image.defaultProps = {
   className: '',
   alt: undefined,
-  lazy: true,
+  lazy: false,
 };
 
 Image.propTypes = {

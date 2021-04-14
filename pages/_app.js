@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
 import Head from 'next/head';
-import { useEffect } from 'react';
 import { createGlobalStyle } from 'styled-components';
 
 import SharedLayout from '../components/SharedLayout';
@@ -24,38 +23,6 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 function MyApp({ Component, pageProps }) {
-  useEffect(
-    function handleLazyImage() {
-      let observer;
-
-      if (!('loading' in HTMLImageElement.prototype)) {
-        const allLazyImages = document.querySelectorAll('img.lazy');
-
-        if (allLazyImages.length) {
-          const handleLazyLoad = (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                observer.unobserve(img);
-              }
-            });
-          };
-
-          observer = new IntersectionObserver(handleLazyLoad);
-          allLazyImages.forEach((lazyImage) => {
-            observer.observe(lazyImage);
-          });
-        }
-      }
-
-      return () => {
-        if (observer) observer.disconnect();
-      };
-    },
-    [Component]
-  );
-
   return (
     <>
       <GlobalStyle />

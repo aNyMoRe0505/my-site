@@ -88,10 +88,14 @@ const HeaderRoot = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: ${HeaderAnimation} 0.5s ease-in-out;
-  background-color: rgb(255, 255, 255, 0.5);
-  backdrop-filter: blur(5px);
+  animation: ${HeaderAnimation} 0.5s ease;
   box-shadow: rgb(0 0 0 / 5%) 0px 4px 20px;
+  background-color: rgb(255, 255, 255);
+
+  @supports (backdrop-filter: blur(5px)) {
+    background-color: rgb(255, 255, 255, 0.5);
+    backdrop-filter: blur(5px);
+  }
 `;
 
 const Container = styled.div`
@@ -104,7 +108,7 @@ const Container = styled.div`
   position: relative;
   overflow: hidden;
   opacity: 0;
-  animation: ${FadeInFromLeft} 0.5s ease-in-out 0.5s forwards;
+  animation: ${FadeInFromLeft} 0.5s ease 0.5s forwards;
   padding: 0 30px;
 
   ${MEDIA_QUERY_MD} {
@@ -143,7 +147,7 @@ const StyledLink = styled(Link)`
     height: 3px;
     background-color: black;
     border-radius: 4px;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease;
   }
 
   @media (hover: hover) {
@@ -184,7 +188,7 @@ const MobileLink = styled(Link)`
   opacity: ${(props) => (props.$menuOpen ? 0 : 1)};
   animation: ${(props) =>
       props.$menuOpen ? MobileLinkOpenAnimation : MobileLinkCloseAnimation}
-    0.5s ease-in-out ${(props) => props.$delay}s forwards;
+    0.5s ease ${(props) => props.$delay}s forwards;
 
   & + & {
     margin-top: 10px;

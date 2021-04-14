@@ -19,7 +19,7 @@ const FooterRoot = styled.div`
   align-items: flex-start;
   padding: 0 0 15px 15px;
   opacity: 0;
-  animation: ${FadeInFromLeft} 0.5s ease-in-out forwards;
+  animation: ${FadeInFromLeft} 0.5s ease forwards;
 `;
 
 const Text = styled.p`
@@ -27,6 +27,12 @@ const Text = styled.p`
 
   a {
     font-weight: bold;
+
+    @media (hover: hover) {
+      :hover {
+        opacity: 0.8;
+      }
+    }
   }
 `;
 

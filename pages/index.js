@@ -43,10 +43,8 @@ const Root = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 30px;
 
   ${MEDIA_QUERY_LG} {
-    padding: 100px 30px 30px;
     flex-direction: row;
   }
 `;
@@ -57,7 +55,7 @@ const LeftSection = styled.div`
   align-items: center;
   flex: 2;
 
-  ${MEDIA_QUERY_LG} {
+  ${MEDIA_QUERY_MD} {
     align-items: flex-start;
   }
 `;
@@ -83,7 +81,7 @@ const Title = styled.h1`
   position: relative;
   width: fit-content;
   opacity: 0;
-  animation: ${FadeFromLeftAnimation} 0.5s ease-in-out forwards;
+  animation: ${FadeFromLeftAnimation} 0.5s ease forwards;
 
   ::after {
     content: '';
@@ -93,7 +91,7 @@ const Title = styled.h1`
     background-color: black;
     bottom: -5px;
     left: 0;
-    animation: ${TitleLineAnimation} 0.5s ease-in-out 0.3s forwards;
+    animation: ${TitleLineAnimation} 0.5s ease 0.3s forwards;
   }
 
   ${MEDIA_QUERY_MD} {
@@ -106,10 +104,10 @@ const SubText = styled.p`
   font-size: 16px;
   text-align: left;
   opacity: 0;
-  animation: ${FadeFromLeftAnimation} 0.5s ease-in-out forwards;
+  animation: ${FadeFromLeftAnimation} 0.5s ease 0.8s forwards;
 
   ${MEDIA_QUERY_MD} {
-    font-size: 20px;
+    font-size: 18px;
   }
 `;
 
@@ -119,8 +117,8 @@ const ArticleBlock = styled.div`
   width: 100%;
   word-break: break-word;
   opacity: 0;
-  animation: ${FadeFromRightAnimation} 0.5s ease-in-out
-    ${(props) => props.$delay}s forwards;
+  animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
+    forwards;
 
   ${MEDIA_QUERY_MD} {
     justify-content: space-between;
@@ -134,8 +132,8 @@ const SeparateLine = styled.div`
   background-color: #e4e3e3;
   margin: 30px 0;
   opacity: 0;
-  animation: ${FadeFromRightAnimation} 0.5s ease-in-out
-    ${(props) => props.$delay}s forwards;
+  animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
+    forwards;
 `;
 
 const TimeBlock = styled.div`
@@ -175,7 +173,7 @@ const LinkButton = styled(Link)`
   border: 1px solid black;
   color: black;
   padding: 5px;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease;
 
   ::after {
     content: '';
@@ -186,7 +184,7 @@ const LinkButton = styled(Link)`
     width: 0%;
     height: 100%;
     background-color: white;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease;
   }
 
   @media (hover: hover) {
@@ -206,8 +204,8 @@ const ExploreButton = styled(LinkButton)`
   display: block;
   width: fit-content;
   opacity: 0;
-  animation: ${FadeFromRightAnimation} 0.5s ease-in-out
-    ${(props) => props.$delay}s forwards;
+  animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
+    forwards;
 `;
 
 const MinuteText = styled.span`
@@ -232,9 +230,13 @@ const DateText = styled.span`
 
 const ArticleTitle = styled.h1`
   margin: 0;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
   line-height: 35px;
+
+  ${MEDIA_QUERY_MD} {
+    font-size: 28px;
+  }
 `;
 
 const ArticleDesc = styled.p`
