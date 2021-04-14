@@ -214,17 +214,10 @@ const Tag = styled.span`
   font-weight: bold;
   box-shadow: rgb(128 128 128 / 47%) 0px 0px 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
   margin: 0 10px 10px 0;
   opacity: 0;
   animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
     forwards;
-
-  @media (hover: hover) {
-    :hover {
-      transform: translate(3px, -3px);
-    }
-  }
 `;
 
 const workExperiences = [
