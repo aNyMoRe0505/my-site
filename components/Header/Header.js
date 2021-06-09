@@ -197,6 +197,10 @@ const MobileLink = styled(Link)`
 
 const links = [
   {
+    text: 'Home',
+    pathname: URLS.HOME,
+  },
+  {
     text: 'About',
     pathname: URLS.ABOUT,
   },

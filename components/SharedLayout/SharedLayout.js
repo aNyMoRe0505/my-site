@@ -18,8 +18,7 @@ const ChildrenWrapper = styled.div`
   flex: 1;
   width: 100%;
   max-width: 1264px;
-  padding: 30px;
-  overflow: hidden;
+  padding: 25px;
 
   ${MEDIA_QUERY_LG} {
     padding: 100px 30px 30px;

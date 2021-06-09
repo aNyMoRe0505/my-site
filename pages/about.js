@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import Head from 'next/head';
 import styled, { keyframes } from 'styled-components';
 
 import { MEDIA_QUERY_LG, MEDIA_QUERY_MD } from '@/constants/breakpoint';
@@ -39,8 +40,8 @@ const TitleLineAnimation = keyframes`
 const Root = styled.div`
   width: 100%;
   display: flex;
-
   flex-direction: column;
+  overflow: hidden;
 
   ${MEDIA_QUERY_LG} {
     flex-direction: row;
@@ -257,6 +258,9 @@ const skillTags = [
 const About = () => {
   return (
     <Root>
+      <Head>
+        <title>Paul&apos;s Blog - About</title>
+      </Head>
       <LeftSection>
         <Title>About Me</Title>
         <SubText>

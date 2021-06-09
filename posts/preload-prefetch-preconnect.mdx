@@ -1,0 +1,110 @@
+---
+title: 一起來看 Preload、Prefetch、Preconnect
+tags: [WEB, PERFORMANCE]
+category: NOTE
+readTime: 8
+desc: 在網頁優化中我們可以利用 <link> 標籤加快瀏覽器對於資源的載入速度, 其中又分為 preload、prefetch 以及 preconnect, 稍微筆記一下這三個有什麼差別
+date: '2021-04-26'
+---
+
+# 一起來看 Preload、Prefetch、Preconnect
+
+隨著現在越來越注重使用者體驗, 網頁的優化越來越重要, 其中一個切入點就是資源的加載。
+
+在 HTML 中 **link** 標籤的 **rel** 屬性能夠幫助我們提示瀏覽器提前下載資源來達到優化的效果,
+接下來就來看看這三種的差別。
+
+## Preload
+
+**preload** 會告訴瀏覽器說該資源對於使用者是必要的, 請優先下載該資源。
+
+```js
+<link rel="preload" href="B.png" as="image" />
+```
+
+如果頁面上有個圖片動畫效果原本是 **A.png** hover 的話會替換成 **B.png**, 這時上面這行就會很有效果, 讓使用者的動畫體驗更佳。
+
+另外也可以使用 **media** 屬性, 在特定情況下才進行 preload。
+
+```js
+<link rel="preload" href="B.png" as="image" media="(max-width: 600px)" />
+```
+
+[as](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#attributes) 屬性對於 **preload** 和 **prefetch** 是必要的屬性, 用來指定資源類別, request matching 和 request prioritization。
+
+雖然瀏覽器會先掃一遍 html 提早發現資源進行下載, 但有字體資源會隱藏在 **.css** 中, 這個時候 preload 就會非常有幫助
+
+<ArticleImage src="https://i.imgur.com/XoiiZlY.png" alt="google font css" remark="google font css" />
+
+在現今網頁以 SPA 為主流的時代, JS bundle size 較大造成使用者第一次造訪網頁時有可能會有一陣子看到空白, 等到載入完成後才能跟使用者互動，
+縱使使用 SSR + CSR 的方式來解決, 我們也應該要盡快優先下載互動所需的 **.js** 檔案。
+
+<ArticleImage src="https://i.imgur.com/tI296oQ.png" alt="preload script" remark="preload script" />
+
+## Prefetch
+
+prefetch 是告訴瀏覽器說我**可能**之後會用到該資源, 在空閒時可以先幫我下載, 所以優先程度會比較低
+
+常見的案例是**分頁**, 當使用者到 A 頁面時, 可能下一步會到 B 頁面, 這個時候就可以先 prefetch B 頁面所需的檔案, 這樣使用者到 B 頁面時就可以很快速地看到畫面！
+
+Next.js 就有自動支援這個[功能](https://nextjs.org/docs/api-reference/next/link), 只要連結出現在 viewport 且有用 **NextLink** 包住和該頁面是 **Static Generation** 的話, 就會自動 prefetch！
+
+<ArticleImage src="https://i.imgur.com/vGoEb5w.png" alt="prefetch script" remark="prefetch script" />
+
+## Preconnect
+
+preconnect 告訴瀏覽器這個網頁在之後會需要對某個 domain 進行連線, 請先幫我建立好連線.
+
+這篇[文章](https://www.igvita.com/2015/08/17/eliminating-roundtrips-with-preconnect/)對於 preconnect 的解釋非常清楚, 我在這邊整理一下重點.
+
+當我們想要使用 google font 的字體時, 通常都會到[這裡](https://fonts.google.com/)找我們要的字體, 選好後會出現以下畫面
+
+<ArticleImage src="https://i.imgur.com/EYuDuyn.png" alt="google font" />
+
+會發現除了下載 css 之外還對 **https://fonts.gstatic.com** 進行了 preconnect
+
+查看下載回來的 css 後會發現裡面的字體會是由這個 domain 來 host
+
+<ArticleImage src="https://i.imgur.com/XoiiZlY.png" alt="google font css" />
+
+那麼先進行 preconnect 會有什麼好處呢? 在瀏覽器傳輸資料前會有幾個步驟需要做
+
+1. 向 DNS 請求解析域名
+2. TCP握手
+3. 如果是 https, 則還需要 SSL Negotiation
+4. 完成, 等待資料拿到第一個 byte
+
+以上每個步驟都會花費一個 [RTT](https://www.cloudflare.com/zh-tw/learning/cdn/glossary/round-trip-time-rtt/),
+再延遲很高的情況下會拖慢取得資源的速度
+
+<ArticleImage src="https://www.igvita.com/posts/15/xfont-preconnect.png.pagespeed.ic.ALPEs7sMxi.webp" alt="preconnect request" remark="source: https://www.igvita.com" />
+
+上面那張圖下半部使用了 **preconnect**, 而上半部沒有
+
+首先來看上半部
+
+1. 和 **font.googleapis.com** 建立連線
+2. 下載 css
+3. 發現步驟2下載回來的 css 裡有包含字體檔案, 於是和 **fonts.gstatic.com** 建立連線
+4. 下載字體
+
+而下半部會是
+
+1. 和 **font.googleapis.com**、**fonts.gstatic.com** 建立連線
+2. 下載 css
+3. 發現步驟2下載回來的 css 裡有包含字體檔案, => 下載字體
+
+由此可以看出我們省下了和 **fonts.gstatic.com** 建立連線的時間！真是可喜可賀
+
+## Reference
+
+- [深入淺出 Preload, Prefetch 和 Preconnect](https://shubo.io/preload-prefetch-preconnect/)
+- [Eliminating Roundtrips with Preconnect](https://www.igvita.com/2015/08/17/eliminating-roundtrips-with-preconnect/)
+
+
+
+
+
+
+
+

@@ -35,6 +35,7 @@ class MyDocument extends Document {
         <Head>
           <link rel="icon" type="image/x-icon" href="/favicon.png" />
           <link rel="preconnect" href="https://fonts.gstatic.com" />
+          <link rel="preconnect" href="https://i.imgur.com" />
           <link
             rel="preload"
             href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Sans:wght@400;700&display=swap"
