@@ -1,5 +1,7 @@
 /* eslint-disable react/prop-types */
 import Head from 'next/head';
+import { useEffect } from 'react';
+import smoothscroll from 'smoothscroll-polyfill';
 import { createGlobalStyle } from 'styled-components';
 
 import SharedLayout from '../components/SharedLayout';
@@ -23,6 +25,10 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    smoothscroll.polyfill();
+  }, []);
+
   return (
     <>
       <GlobalStyle />

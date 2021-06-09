@@ -1,10 +1,13 @@
 import dayjs from 'dayjs';
+import PropTypes from 'prop-types';
 import { Fragment } from 'react';
 import styled, { keyframes } from 'styled-components';
 
 import Link from '@/components/Link';
 import { MEDIA_QUERY_LG, MEDIA_QUERY_MD } from '@/constants/breakpoint';
 import URLS from '@/constants/urls';
+
+import { getPosts } from './api/articles';
 
 const FadeFromLeftAnimation = keyframes`
   from {
@@ -43,6 +46,7 @@ const Root = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 
   ${MEDIA_QUERY_LG} {
     flex-direction: row;
@@ -244,32 +248,7 @@ const ArticleDesc = styled.p`
   font-size: 16px;
 `;
 
-const fakeArticles = [
-  {
-    id: 1,
-    readTime: 8,
-    date: '2021-02-05',
-    title: 'Title',
-    desc: 'descdescdescdescdescdescdescdescdescdesc',
-  },
-  {
-    id: 3,
-    readTime: 10,
-    date: '2021-12-31',
-    title: 'Title',
-    desc: 'descdescdescdescdescdescdescdescdescdesc',
-  },
-  {
-    id: 2,
-    readTime: 8,
-    date: '2021-02-05',
-    title: '中文中文中文中文中文中文中文中文中文中中文',
-    desc:
-      'descdescdescdescdescdescdescdescdescdescdescdescdescdescdescdescdescdescdescdescescdescdescdescdesc',
-  },
-];
-
-const Home = () => {
+const Home = ({ posts }) => {
   return (
     <Root>
       <LeftSection>
@@ -277,21 +256,23 @@ const Home = () => {
         <SubText>想到什麼就寫什麼, 通常是筆記, 萬年不更新</SubText>
       </LeftSection>
       <RightSection>
-        {fakeArticles.map((article, index) => (
-          <Fragment key={article.id}>
+        {posts.map((article, index) => (
+          <Fragment key={article.fileName}>
             <ArticleBlock $delay={0.8 + index * 0.1}>
               <TimeBlock>
-                <MinuteText>{article.readTime} Mins Read</MinuteText>
-                <DateText>{dayjs(article.date).format('DD MMM YY')}</DateText>
+                <MinuteText>{article.data.readTime} Mins Read</MinuteText>
+                <DateText>
+                  {dayjs(article.data.date).format('DD MMM YY')}
+                </DateText>
               </TimeBlock>
               <ContentBlock>
-                <ArticleTitle>{article.title}</ArticleTitle>
-                <ArticleDesc>{article.desc}</ArticleDesc>
+                <ArticleTitle>{article.data.title}</ArticleTitle>
+                <ArticleDesc>{article.data.desc}</ArticleDesc>
               </ContentBlock>
               <LearnBlock>
                 <LinkButton
                   href={URLS.BLOG_DETAIL}
-                  query={{ articleId: article.id }}
+                  query={{ slug: article.fileName }}
                 >
                   Learn More
                 </LinkButton>
@@ -300,15 +281,25 @@ const Home = () => {
             <SeparateLine $delay={0.8 + index * 0.1} />
           </Fragment>
         ))}
-        <ExploreButton
-          href={URLS.BLOG}
-          $delay={0.8 + fakeArticles.length * 0.1}
-        >
+        <ExploreButton href={URLS.BLOG} $delay={0.8 + posts.length * 0.1}>
           Explore More
         </ExploreButton>
       </RightSection>
     </Root>
   );
 };
+
+Home.propTypes = {
+  posts: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
+
+export function getStaticProps() {
+  const posts = getPosts({ limit: 3, offset: 0 });
+  return {
+    props: {
+      posts,
+    },
+  };
+}
 
 export default Home;
