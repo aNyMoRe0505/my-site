@@ -4,7 +4,148 @@ tags: [REACT, WEB]
 category: NOTE
 readTime: 10
 desc: 這陣子在負責將專案的版本升級, 隨著 Next.js 不再推薦使用 getIntiailProps, 很多套件也不再支援, 所以需要將專案翻新, 但 getServerSideProps 真的比較好嗎？
-date: '2021-06-09'
+date: '2021-07-05'
 ---
 
-待補
+# 談談 getInitialProps, getServerSideProps Part1
+
+應該有蠻多人不知道, 其實 Next.js 最一開始是沒有 [getServerSideProps](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering) 的,
+對剛熟悉 Next.js 的人來說, 應該只會在 [Custom Document](https://nextjs.org/docs/advanced-features/custom-document)
+以及 [Custom App](https://nextjs.org/docs/advanced-features/custom-app) 裡看過 getInitialProps, 官方的 tutorial 並不會提到
+, 除非特意去[搜尋](https://nextjs.org/docs/api-reference/data-fetching/getInitialProps)才會發現在 9.3 版本以前, 主要的 data fetching method 就是 getInitialProps, 這讓人覺得 getInitialProps 將在不久後 depreciated,
+目前看起來也是這樣沒錯XD
+
+最近在工作上因為某些套件有 bug, 所以必須升級, 但這些套件的最新版本有些已經不再支援 getInitialProps 了, 像是跟多國語系相關的 [next-i18next](https://github.com/isaachinman/next-i18next),
+所以我必須做出抉擇, 要馬就是用相對舊的版本, 要馬就是把專案內的 getInitialProps 全部重構成 getServerSideProps 和 [getStaticProps](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation)。
+
+因為有一段時間可以好好的將專案重構, 所以最後選擇了將所有 getInitialProps 改掉的大工程(所以才有這篇XD)。在一番努力下成功地完成了, 但在這過程中讓我覺得 Next.js 採用 getServerSideProps 是個不太好的決定,
+所以想寫下這篇文章記錄一下我的感想, 不過這是我個人主觀的意見就是了。
+
+這篇是 Part1, 會有幾個 part 我不知道(蛤?), 在這個 part 我想先簡單整理介紹下 getInitialProps 和 getServerSideProps,
+之後才會提到為什麼我覺得 getServerSideProps 不太好, 如果是完全沒接觸過 Next.js 的人可以先跳過這系列了, 你應該先去看看官方的 tutorial XD
+
+## getInitialProps
+
+先附上官方[範例](https://nextjs.org/docs/api-reference/data-fetching/getInitialProps)程式碼
+
+```
+function Page({ stars }) {
+  return <div>Next stars: {stars}</div>
+}
+
+Page.getInitialProps = async (ctx) => {
+  const res = await fetch('https://api.github.com/repos/vercel/next.js')
+  const json = await res.json()
+  return { stars: json.stargazers_count }
+}
+
+export default Page
+```
+
+有用過的人應該不陌生, 為了 SEO 我們會想要讓使用者第一次拿到的 html 有資料, 而不是像 SPA 一樣拿到一個幾乎空白的 html。
+
+所以可以利用這個方式讓使用者拿到有資料的 html, getInitialProps 所回傳的物件將會變成 Page Component 的 props,
+在這裡就是 **stars**, 頁面在 render 前會先執行這個 function 來拿所需要的資料 render 到頁面上。
+
+**也就是說頁面必須要等 API 完成才會進行頁面 render**, 想當然的這對使用者是一個非常差的體驗, 但是想要產生動態的 html, 勢必就要等待 API 完成,
+所以最後做了一個取捨, 我們只需要在使用者第一次 landing 網頁時才需要等待 API 完成, 而在使用者換頁的時候我們不必等待 API response, 因為沒有意義！
+這也是為什麼 Next.js 出現的原因, SPA + SSR 的解決方案。
+
+那麼 getInitialProps 怎麼達成這件事呢？getInitialProps 可以在 client、server side 執行, 在使用者第一次 landing 該頁面會是在 server side 執行,
+如果是換頁到該頁面時就會是在 client side 執行, 可以用 **ctx.req (http request obj)** 這個物件來判斷是否為 server side, 所以上面那段程式碼可以改成這樣
+
+```
+function Page({ stars }) {
+  // if stars not exist (null) do something...
+  return <div>Next stars: {stars}</div>
+}
+
+Page.getInitialProps = async (ctx) => {
+  let stars = null;
+
+  if (ctx.req) {
+    const res = await fetch('https://api.github.com/repos/vercel/next.js')
+    const json = await res.json()
+    stars = json.stargazers_count;
+  }
+
+  return { stars }
+}
+
+export default Page
+```
+
+只要 **ctx.req** 存在就是在 server side 執行, 也就是使用者第一次 landing 到該頁面,
+我們只有在這種情況下才需要等待 API response 讓使用者拿到有資料的 html。
+
+如果使用者是換頁進到該頁面, 則我們必須自己在 component 內寫取得資料, loading 狀態的邏輯從而達到 SSR + SPA 的效果。
+
+最後整理一下幾個小重點, 詳細的就請到[官方文件](https://nextjs.org/docs/api-reference/data-fetching/getInitialProps)去看囉～
+
+- 會在 client side 執行, 所以會被打包進前端的 bundle。
+- 可以利用 **ctx.req** 判斷是否為 server side。
+- 不能隨意使用只有 client 或 server 的東西, 要做好判斷像是 window 物件。
+- 利用 await 讓畫面 render 前就有資料。
+
+## getServerSideProps
+
+ok, 再來簡單講一下 getServerSideProps, 一樣也看一下官方的[範例](https://nextjs.org/docs/basic-features/data-fetching#simple-example-1)
+
+```
+function Page({ data }) {
+  // Render data...
+}
+
+// This gets called on every request
+export async function getServerSideProps(ctx) {
+  // Fetch data from external API
+  const res = await fetch(`https://.../data`)
+  const data = await res.json()
+
+  // Pass data to the page via props
+  return { props: { data } }
+}
+
+export default Page
+```
+
+其實大同小異, 目的也是為了讓頁面 render 前將資料拿好再產生 html 來改善 SEO,
+但是不同的是, **getServerSideProps 只會在 server side 執行**, 什麼意思呢？
+
+**ctx.req** 這個物件不管是在第一次 landing, 或者換頁都會存在, 前端換頁時 next.js 會幫我們打一隻 api 到 server 執行 getServerSideProps 去拿結果。
+
+到這裡可能就有人會想到, 咦！既然 **ctx.req** 永遠都會存在, 那我們怎麼判斷使用者是換頁還是第一次 landing 呢？
+
+目前其實可以從 **ctx.req.url** 來判斷, 如果是前端換頁的話 **ctx.req.url** 的開頭會是 **/_next**, 所以可以這樣寫
+
+```
+export async function getServerSideProps(ctx) {
+  const isClientSideNavigate = ctx.req.url.startsWith('/_next');
+  let data = null;
+
+  if (!isClientSideNavigate) {
+    const res = await fetch(`https://.../data`)
+    data = await res.json()
+  }
+
+  return { props: { data } }
+}
+```
+
+實際在使用的時候可以想想怎麼寫比較乾淨, 避免去重複寫一樣的邏輯, 不過這不是這篇的重點就不贅述了。
+
+一樣稍微整理幾個重點, 但詳細的還是請去看官方文件
+
+- **ctx.req** 永遠存在
+- 只會在 server side 執行
+- 如果是 client side navigate, next.js 會送 api 到 server 執行 getServerSideProps
+- code 不會被打包進前端的 bundle
+- 要注意不能隨意使用只有 client 的東西
+- 利用 await 讓畫面 render 前就有資料
+
+差不多就是這樣, 下篇再提為什麼我會覺得 getServerSideProps 不太好的原因
+
+## Reference
+
+- [Next.js official doc](https://nextjs.org/docs/getting-started)
+- [Defer getServerSideProps on client-side navigation](https://github.com/vercel/next.js/issues/13910)
