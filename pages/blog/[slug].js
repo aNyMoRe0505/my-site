@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import fs from 'fs';
 import matter from 'gray-matter';
 import Head from 'next/head';
@@ -45,11 +46,10 @@ const ContentSection = styled.div`
 `;
 
 const Title = styled.h1`
-  margin: 0 0 20px 0;
+  margin: 0;
   font-size: 28px;
 
   ${MEDIA_QUERY_MD} {
-    margin: 0 0 25px 0;
     font-size: 30px;
   }
 `;
@@ -129,6 +129,50 @@ const Code = styled(SyntaxHighlighter).attrs({
   }
 `;
 
+const MetaWrapper = styled.div`
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  width: 100%;
+  margin: 10px 0 20px;
+
+  ${MEDIA_QUERY_MD} {
+    margin: 20px 0 30px;
+    align-items: center;
+    flex-direction: row;
+  }
+`;
+
+const Time = styled.p`
+  font-size: 14px;
+  color: rgb(173, 173, 173);
+  margin: 0 10px 0 0;
+`;
+
+const CategoryTagWrap = styled.div`
+  display: flex;
+  margin-top: 5px;
+
+  ${MEDIA_QUERY_MD} {
+    margin-top: 0;
+  }
+`;
+
+const Category = styled.span`
+  font-weight: bold;
+  font-size: 14px;
+`;
+
+const Tag = styled.span`
+  background-color: white;
+  border-radius: 20px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: rgb(128 128 128 / 47%) 0px 0px 4px;
+  margin-left: 10px;
+`;
+
 const components = {
   ArticleImage,
   h1: Title,
@@ -148,7 +192,19 @@ const BlogDetail = ({ source, metaData }) => {
       <Head>
         <title>Paul&apos;s Blog - {metaData.title}</title>
       </Head>
-      <ContentSection>{content}</ContentSection>
+      <ContentSection>
+        <Title>{metaData.title}</Title>
+        <MetaWrapper>
+          <Time>{dayjs(metaData.date).format('DD MMM YY')}</Time>
+          <CategoryTagWrap>
+            <Category>{metaData.category}</Category>
+            {metaData.tags.map((tag) => (
+              <Tag key={tag}>{tag}</Tag>
+            ))}
+          </CategoryTagWrap>
+        </MetaWrapper>
+        {content}
+      </ContentSection>
       <TableOfContent />
     </Root>
   );
@@ -158,6 +214,9 @@ BlogDetail.propTypes = {
   source: PropTypes.shape({}).isRequired,
   metaData: PropTypes.shape({
     title: PropTypes.string.isRequired,
+    category: PropTypes.string.isRequired,
+    date: PropTypes.string.isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string).isRequired,
   }).isRequired,
 };
 
