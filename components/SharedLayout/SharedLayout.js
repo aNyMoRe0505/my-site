@@ -21,7 +21,7 @@ const ChildrenWrapper = styled.div`
   padding: 25px;
 
   ${MEDIA_QUERY_LG} {
-    padding: 100px 30px 30px;
+    padding: 75px 30px 30px;
   }
 `;
 

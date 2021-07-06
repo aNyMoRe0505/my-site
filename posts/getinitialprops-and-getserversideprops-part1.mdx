@@ -1,9 +1,9 @@
 ---
-title: 談談 getInitialProps, getServerSideProps Part1
-tags: [REACT, WEB]
+title: 淺談 getInitialProps, getServerSideProps Part1
+tags: [REACT, NEXT.JS, WEB]
 category: NOTE
 readTime: 7
-desc: 這陣子在負責將專案的版本升級, 隨著 Next.js 不再推薦使用 getIntiailProps, 很多套件也不再支援, 所以需要將專案翻新, 但 getServerSideProps 真的比較好嗎？
+desc: 隨著 Next.js 不再推薦使用 getIntiailProps, 很多套件也不再支援, 但 getServerSideProps 真的比較好嗎？
 date: '2021-07-05'
 ---
 
@@ -141,7 +141,7 @@ export async function getServerSideProps(ctx) {
 - 要注意不能隨意使用只有 client 的東西
 - 利用 await 讓畫面 render 前就有資料
 
-差不多就是這樣, 下篇再提為什麼我會覺得 getServerSideProps 不太好的原因
+差不多就是這樣, [Part2](/blog/getinitialprops-and-getserversideprops-part2) 再提為什麼我會覺得 getServerSideProps 不太好的原因
 
 ## Reference
 

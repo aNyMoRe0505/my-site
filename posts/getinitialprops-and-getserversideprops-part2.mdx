@@ -1,0 +1,100 @@
+---
+title: 淺談 getInitialProps, getServerSideProps Part2
+tags: [REACT, NEXT.JS, WEB]
+category: NOTE
+readTime: 7
+desc: 上次簡單介紹了兩者差異, 再來談談為什麼我覺得 getServerSideProps 不太好的原因, 也順便提一下 getStaticProps
+date: '2021-07-06'
+---
+
+如果還沒看過 Part1 的話可以從[這裡](/blog/getinitialprops-and-getserversideprops-part1)連結過去～
+
+## getServerSideProps
+
+上次簡單介紹了 getInitialProps (GIP) 和 getServerSideProps (GSSP) 的差異, 這篇來講講為什麼我覺得 getServerSideProps 不太好的原因。
+
+在 Part1 提到 GSSP 只會在 server side 執行, 當前端 routing 到該頁面時, 會是 next.js 送一個 api request 到 server 去拿 GSSP 的結果,
+其實這部份就是我覺得 GSSP 不太好的原因。
+
+或許會覺得既然 GSSP 可以跟 GIP 一樣判斷使用者是否是第一次 landing 到該頁從而避免掉不需要的 await, 為什麼我會覺得比較差呢？
+其實重點是在**前端 routing 到該頁面時, 會是 next.js 送一個 api request 到 server 去拿 GSSP 的結果**, 也就說如果當你開啟 devtool 觀察 network,
+換頁到使用 GSSP 的頁面時你會發現會多一個 request 像下圖。
+
+<ArticleImage src="https://i.imgur.com/tYW4GUI.png" alt="GSSP request" />
+
+其實這就是問題所在, 也就是說每次換頁前都必須等待該 api response 回來後才會進行換頁, 圖中顯示該 request 花費了 **166ms**,
+所以這段時間內使用者其實會感覺頁面卡住了, 更不用說當使用者網路狀況或其他原因導致這段時間更長的時後, 而且這也導致 server 的負擔加重！
+
+而 GIP 在前端換頁時是會在 client side 執行的, 所以並不需要與 server 溝通而是由 js 處理。有興趣的人可以試試看換頁到 GIP 和換頁到 GSSP 體感上的差別,
+我自己認為差異能夠明顯的感覺出來，雖說 GSSP 不會被打包進前端的 code 從而讓 bundle size 變小, 但是我個人覺得這樣失去了更多QQ
+
+不過在後續 next.js 的更新中除了 getStaticProps(GSP), 也提出了新的 feature **Incremental Static Regeneration (ISR)**, 可以感覺得出來 next.js team 想要主打 Static Site Generation(SSG),
+所以順便簡單介紹下 GSP 以及 ISR 和未來發展 (?)
+
+## getStaticProps
+
+詳細的介紹當然是去看[官方文件](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation),
+簡單來說, 當頁面是 GSP 的時候, 會在 build time 時產好 HTML 以及 JSON 檔(執行 GSP 的結果), 當使用者 request 進來時就是會拿這些事先產生好的檔案。
+
+好處當然就是使用者拿到的 html 已經事先產好了, 而且可以藉由 CDN 將檔案 cache 起來, 速度上會比 GSP 快上許多, 而且還能夠 [prefetch](https://nextjs.org/docs/api-reference/next/link) 後續可能需要的 JSON 檔案,
+但缺點也顯而易見, 由於在 build time 時就產好這些檔案, 所以如果該頁面需要顯示的資料需要即時更新, 內容改動後下次 request 就要看到變化的話就不適合這條路線。
+
+而要更新內容時必須重新 build 好再次上版, 可以想像得出來這樣的做法蠻不切實際的, 只更新了一個頁面卻要整個網站重 build 和上版越想越不對勁, 所以出現了 **Incremental Static Regeneration (ISR)**。
+
+## Incremental Static Regeneration
+
+為了解決 SSG 內容需要改動時整個網站重 build 這個缺點, next.js team 提供了 ISR 來解決這個問題, 先來看看官方的範例。
+
+```
+function Blog({ posts }) {
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+
+// This function gets called at build time on server-side.
+// It may be called again, on a serverless function, if
+// revalidation is enabled and a new request comes in
+export async function getStaticProps() {
+  const res = await fetch('https://.../posts')
+  const posts = await res.json()
+
+  return {
+    props: {
+      posts,
+    },
+    // Next.js will attempt to re-generate the page:
+    // - When a request comes in
+    // - At most once every 10 seconds
+    revalidate: 10, // In seconds
+  }
+}
+```
+
+可以發現 getStaticProps 除了回傳 component 需要的 props 之外, 還多了 revalidate 這個 key,
+這個 key 是拿來做什麼的呢？ 從程式碼上的註解應該也看得出來, 有點像是 response header 裡 cache-control max-age,
+當使用者進來該頁面時, 如果該頁面產生好的時間沒超過 10 秒鐘, 該使用者就會看到當初 build time 時產生好的頁面。
+
+一但超過 10 秒後, 下次使用者進來這個頁面時仍然會是看到當初 build time 時產生好的頁面, 但 next.js 會在背景重 build 這頁面,
+當這個頁面重新 build 完後, 下次使用者進來就會看到新的頁面！
+
+這真的是一個非常棒的 feature, 但還是有些缺點
+
+1. 目前只能設定 revalidate time 來進行 re-build
+2. 沒辦法知道何時 re-build 完成 (雖然 [getStaitcPaths 有 fallback 的 option](https://nextjs.org/docs/basic-features/data-fetching#getstaticpaths-static-generation))
+3. 只有使用者第一次直接到該頁面才會觸發 revalidate, next/link next/router routing 過去的不會觸發
+
+關於這些缺點其實社群也有[討論](https://github.com/vercel/next.js/discussions/11552#discussioncomment-2655)到, 主要是沒辦法主動觸發 re-build 只能設定 revalidate time 這點,
+不過值得高興的是, next.js team 也打算提供 on-demand 的方式去觸發 re-build, 這樣讓未來多了許多可能性, 像是可能在後台更新文章內容後主動去觸發 re-build, 這樣就更有可能讓使用者看到最新的資料！
+
+最後, 不管要用哪種策略去進行開發, 還是要根據公司產品走向, 行銷團隊的溝通來決定出一個最好的方式, 不過我還是覺得 getInitialProps 很可惜, 雖然 next.js 有提到並不打算 depreciated,
+但是 tutorial 內都拔掉了很難想像未來還會有 getInitialProps XD
+
+## Reference
+
+- [Next.js official doc](https://nextjs.org/docs/getting-started)
+- [RFC: Incremental Static Regeneration](https://github.com/vercel/next.js/discussions/11552)

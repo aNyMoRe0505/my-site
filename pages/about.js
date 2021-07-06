@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import Head from 'next/head';
 import styled, { keyframes } from 'styled-components';
 
 import { MEDIA_QUERY_LG, MEDIA_QUERY_MD } from '@/constants/breakpoint';
@@ -214,7 +213,6 @@ const Tag = styled.span`
   font-size: 14px;
   font-weight: bold;
   box-shadow: rgb(128 128 128 / 47%) 0px 0px 4px;
-  cursor: pointer;
   margin: 0 10px 10px 0;
   opacity: 0;
   animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
@@ -258,9 +256,6 @@ const skillTags = [
 const About = () => {
   return (
     <Root>
-      <Head>
-        <title>Paul&apos;s Blog - About</title>
-      </Head>
       <LeftSection>
         <Title>About Me</Title>
         <SubText>
@@ -272,7 +267,7 @@ const About = () => {
             OneDegree
           </ExternalLink>{' '}
           擔任前端工程師, 曾經也開發過後端,
-          但比較喜歡有畫面的感覺所以選擇了前端。
+          但比較喜歡有畫面的感覺所以選擇專注在前端。
         </SubText>
         <SubText>
           喜歡打球、看漫畫。 最喜歡的球星是{' '}
@@ -321,11 +316,8 @@ const About = () => {
           );
         })}
         <TagWrapper>
-          {skillTags.map((tag, index) => (
-            <Tag
-              $delay={0.8 + (workExperiences.length - 1) * 0.1 + index * 0.1}
-              key={tag}
-            >
+          {skillTags.map((tag) => (
+            <Tag $delay={0.8 + (workExperiences.length - 1) * 0.1} key={Tag}>
               {tag}
             </Tag>
           ))}

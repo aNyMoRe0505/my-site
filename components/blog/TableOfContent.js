@@ -40,6 +40,7 @@ const SubTitleLink = styled.div`
   font-size: 18px;
   cursor: pointer;
   position: relative;
+  text-align: center;
 
   ::after {
     content: '';
@@ -85,8 +86,9 @@ const TableOfContent = () => {
       {contents.map((contentDOM) => (
         <SubTitleLink
           onClick={() => {
-            const elementOffsetTop = document.getElementById(contentDOM.id)
-              ?.offsetTop;
+            const elementOffsetTop = document.getElementById(
+              contentDOM.id
+            )?.offsetTop;
 
             window.scroll({
               top: elementOffsetTop - HEADER_HEIGHT - 50,
