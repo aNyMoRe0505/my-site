@@ -317,7 +317,7 @@ const About = () => {
         })}
         <TagWrapper>
           {skillTags.map((tag) => (
-            <Tag $delay={0.8 + (workExperiences.length - 1) * 0.1} key={Tag}>
+            <Tag $delay={0.8 + (workExperiences.length - 1) * 0.1} key={tag}>
               {tag}
             </Tag>
           ))}
