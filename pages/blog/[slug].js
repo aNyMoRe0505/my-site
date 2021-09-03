@@ -2,8 +2,8 @@ import dayjs from 'dayjs';
 import fs from 'fs';
 import matter from 'gray-matter';
 import Head from 'next/head';
-import hydrate from 'next-mdx-remote/hydrate';
-import renderToString from 'next-mdx-remote/render-to-string';
+import { MDXRemote } from 'next-mdx-remote';
+import { serialize } from 'next-mdx-remote/serialize';
 import path from 'path';
 import PropTypes from 'prop-types';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -186,7 +186,6 @@ const components = {
 };
 
 const BlogDetail = ({ source, metaData }) => {
-  const content = hydrate(source, { components });
   return (
     <Root>
       <Head>
@@ -203,7 +202,7 @@ const BlogDetail = ({ source, metaData }) => {
             ))}
           </CategoryTagWrap>
         </MetaWrapper>
-        {content}
+        <MDXRemote {...source} components={components} />
       </ContentSection>
       <TableOfContent />
     </Root>
@@ -225,11 +224,7 @@ export const getStaticProps = async ({ params }) => {
   const source = fs.readFileSync(postFilePath);
 
   const { content, data } = matter(source);
-
-  const mdxSource = await renderToString(content, {
-    components,
-    scope: data,
-  });
+  const mdxSource = await serialize(content);
 
   return {
     props: {
