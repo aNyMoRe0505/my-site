@@ -153,6 +153,7 @@ const HamburgerWrapper = styled.button.attrs({
   border: none;
   background-color: transparent;
   font-size: 20px;
+  color: black;
 `;
 
 const MobileMenu = styled.div`
