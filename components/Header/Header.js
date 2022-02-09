@@ -13,17 +13,6 @@ import Link from '../Link';
 
 export const HEADER_HEIGHT = 72;
 
-const HeaderAnimation = keyframes`
-  from {
-    height: 0%;
-    opacity: 0;
-  }
-  to {
-    height: 100%;
-    opacity: 1;
-  }
-`;
-
 const FadeInFromLeft = keyframes`
   from {
     transform: translateX(-50px);
@@ -88,14 +77,9 @@ const HeaderRoot = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: ${HeaderAnimation} 0.5s ease;
   box-shadow: rgb(0 0 0 / 5%) 0px 4px 20px;
-  background-color: rgb(255, 255, 255);
-
-  @supports (backdrop-filter: blur(5px)) {
-    background-color: rgb(255, 255, 255, 0.5);
-    backdrop-filter: blur(5px);
-  }
+  background-color: rgb(255, 255, 255, 0.5);
+  backdrop-filter: blur(5px);
 `;
 
 const Container = styled.div`
