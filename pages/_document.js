@@ -1,5 +1,8 @@
+/* eslint-disable react/no-danger */
 import Document, { Head, Html, Main, NextScript } from 'next/document';
 import { ServerStyleSheet } from 'styled-components';
+
+import clarityInitScript from '@/tracking/clarity';
 
 class MyDocument extends Document {
   static async getInitialProps(ctx) {
@@ -44,6 +47,11 @@ class MyDocument extends Document {
           <link
             href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Sans:wght@400;700&display=swap"
             rel="stylesheet"
+          />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: clarityInitScript,
+            }}
           />
         </Head>
         <body>
