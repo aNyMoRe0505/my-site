@@ -33,6 +33,8 @@ class MyDocument extends Document {
   }
 
   render() {
+    const isProd = process.env.NODE_ENV === 'production';
+
     return (
       <Html>
         <Head>
@@ -48,11 +50,13 @@ class MyDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Sans:wght@400;700&display=swap"
             rel="stylesheet"
           />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: clarityInitScript,
-            }}
-          />
+          {isProd && (
+            <script
+              dangerouslySetInnerHTML={{
+                __html: clarityInitScript,
+              }}
+            />
+          )}
         </Head>
         <body>
           <Main />
