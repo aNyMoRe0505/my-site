@@ -1,3 +1,5 @@
+import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import dayjs from 'dayjs';
 import styled from 'styled-components';
 
@@ -10,6 +12,11 @@ import {
   SubText,
   Title,
 } from '@/styles/mainStyle';
+
+const StyledSubText = styled(SubText)`
+  display: flex;
+  align-items: center;
+`;
 
 const ExternalLink = styled.a.attrs({
   target: '_blank',
@@ -115,6 +122,16 @@ const Tag = styled.span`
     forwards;
 `;
 
+const MailIcon = styled(FontAwesomeIcon).attrs({
+  icon: faEnvelope,
+})`
+  && {
+    width: 25px;
+    height: 25px;
+    margin: 0 10px 0 0;
+  }
+`;
+
 const workExperiences = [
   {
     companyAbbrev: 'OneDegree',
@@ -181,6 +198,12 @@ const About = () => {
             Blue Giant
           </ExternalLink>
         </SubText>
+        <StyledSubText>
+          <MailIcon />
+          <ExternalLink href="mailto:anymore0505@gmail.com" $color="#296aac">
+            anymore0505@gmail.com
+          </ExternalLink>
+        </StyledSubText>
       </LeftSection>
       <RightSection>
         <EduBlock>

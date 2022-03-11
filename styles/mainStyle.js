@@ -39,7 +39,6 @@ export const RootWrapper = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 
   ${MEDIA_QUERY_LG} {
     flex-direction: row;
@@ -104,6 +103,7 @@ export const SubText = styled.p`
   animation: ${FadeFromLeftAnimation} 0.5s ease 0.8s forwards;
   max-width: 400px;
   line-height: 30px;
+  width: 100%;
 
   & + & {
     margin: 10px 0 0;
