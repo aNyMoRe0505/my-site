@@ -4,7 +4,13 @@ import path from 'path';
 
 export const POSTS_PATH = path.join(process.cwd(), 'posts');
 
-export const getPosts = ({ limit = 5, offset = 0, tags, category } = {}) => {
+export const getPosts = ({
+  limit,
+  offset = 0,
+  tags,
+  category,
+  keyword,
+} = {}) => {
   const allPostFileName = fs.readdirSync(POSTS_PATH);
 
   let posts = allPostFileName.map((fileName) => {
@@ -13,9 +19,7 @@ export const getPosts = ({ limit = 5, offset = 0, tags, category } = {}) => {
     return { data, content, fileName: fileName.replace('.mdx', '') };
   });
 
-  if (category) {
-    posts = posts.filter((post) => post.data.category === category);
-  }
+  if (category) posts = posts.filter((post) => post.data.category === category);
 
   if (tags) {
     const parsedTags = tags.split(',');
@@ -24,16 +28,22 @@ export const getPosts = ({ limit = 5, offset = 0, tags, category } = {}) => {
     );
   }
 
-  posts = posts
-    .sort((a, b) => +new Date(b.data.date) - +new Date(a.data.date))
-    .slice(+offset, +offset + +limit);
+  if (keyword) {
+    posts = posts.filter((post) =>
+      post.data.title.toLowerCase().includes(keyword.toLowerCase())
+    );
+  }
+
+  posts = posts.sort((a, b) => +new Date(b.data.date) - +new Date(a.data.date));
+
+  if (limit) posts = posts.slice(+offset, +offset + +limit);
 
   return posts;
 };
 
 export default function handler(req, res) {
   const {
-    query: { limit, offset, tags, category },
+    query: { limit, offset, tags, category, keyword },
   } = req;
 
   const posts = getPosts({
@@ -41,6 +51,7 @@ export default function handler(req, res) {
     offset,
     tags,
     category,
+    keyword,
   });
 
   res.status(200).json(posts);

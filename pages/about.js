@@ -1,118 +1,21 @@
+import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import dayjs from 'dayjs';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 
-import { MEDIA_QUERY_LG, MEDIA_QUERY_MD } from '@/constants/breakpoint';
+import { MEDIA_QUERY_MD } from '@/constants/breakpoint';
+import {
+  FadeFromRightAnimation,
+  LeftSection,
+  RightSection,
+  RootWrapper,
+  SubText,
+  Title,
+} from '@/styles/mainStyle';
 
-const FadeFromLeftAnimation = keyframes`
-  from {
-    transform: translateX(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-`;
-
-const FadeFromRightAnimation = keyframes`
-  from {
-    transform: translateX(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-`;
-
-const TitleLineAnimation = keyframes`
-  from {
-    width: 0%;
-    opacity: 0;
-  }
-  to {
-    width: 100%;
-    opacity: 1;
-  }
-`;
-
-const Root = styled.div`
-  width: 100%;
+const StyledSubText = styled(SubText)`
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-
-  ${MEDIA_QUERY_LG} {
-    flex-direction: row;
-  }
-`;
-
-const LeftSection = styled.div`
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  flex: 2;
-
-  ${MEDIA_QUERY_MD} {
-    align-items: flex-start;
-  }
-`;
-
-const RightSection = styled.div`
-  flex: 3;
-  margin: 30px 0 0;
-
-  ${MEDIA_QUERY_MD} {
-    margin: 50px 0 0;
-  }
-
-  ${MEDIA_QUERY_LG} {
-    margin: 9px 0 0;
-  }
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  color: black;
-  font-weight: bold;
-  font-size: 35px;
-  position: relative;
-  width: fit-content;
-  opacity: 0;
-  animation: ${FadeFromLeftAnimation} 0.5s ease forwards;
-
-  ::after {
-    content: '';
-    position: absolute;
-    height: 3px;
-    width: 0%;
-    background-color: black;
-    bottom: -5px;
-    left: 0;
-    animation: ${TitleLineAnimation} 0.5s ease 0.3s forwards;
-  }
-
-  ${MEDIA_QUERY_MD} {
-    font-size: 45px;
-  }
-`;
-
-const SubText = styled.p`
-  margin: 20px 0 0;
-  font-size: 16px;
-  text-align: left;
-  opacity: 0;
-  animation: ${FadeFromLeftAnimation} 0.5s ease 0.8s forwards;
-  max-width: 400px;
-  line-height: 30px;
-
-  & + & {
-    margin: 10px 0 0;
-  }
-
-  ${MEDIA_QUERY_MD} {
-    font-size: 18px;
-  }
 `;
 
 const ExternalLink = styled.a.attrs({
@@ -219,6 +122,16 @@ const Tag = styled.span`
     forwards;
 `;
 
+const MailIcon = styled(FontAwesomeIcon).attrs({
+  icon: faEnvelope,
+})`
+  && {
+    width: 25px;
+    height: 25px;
+    margin: 0 10px 0 0;
+  }
+`;
+
 const workExperiences = [
   {
     companyAbbrev: 'OneDegree',
@@ -255,7 +168,7 @@ const skillTags = [
 
 const About = () => {
   return (
-    <Root>
+    <RootWrapper>
       <LeftSection>
         <Title>About Me</Title>
         <SubText>
@@ -285,6 +198,12 @@ const About = () => {
             Blue Giant
           </ExternalLink>
         </SubText>
+        <StyledSubText>
+          <MailIcon />
+          <ExternalLink href="mailto:anymore0505@gmail.com" $color="#296aac">
+            anymore0505@gmail.com
+          </ExternalLink>
+        </StyledSubText>
       </LeftSection>
       <RightSection>
         <EduBlock>
@@ -323,7 +242,7 @@ const About = () => {
           ))}
         </TagWrapper>
       </RightSection>
-    </Root>
+    </RootWrapper>
   );
 };
 
