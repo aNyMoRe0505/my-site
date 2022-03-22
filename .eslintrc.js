@@ -9,16 +9,10 @@ module.exports = {
     'airbnb',
     'airbnb/hooks',
     'plugin:prettier/recommended',
+    'plugin:@next/next/recommended',
   ],
   parser: 'babel-eslint',
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  plugins: ['react', 'simple-import-sort'],
+  plugins: ['simple-import-sort'],
   rules: {
     'react/react-in-jsx-scope': 0,
     'react/jsx-filename-extension': 0,
@@ -28,7 +22,10 @@ module.exports = {
   },
   settings: {
     'import/resolver': {
-      'babel-module': {},
+      alias: {
+        extensions: ['.js', '.jsx'],
+        map: [['@', '.']],
+      },
     },
   },
 };
