@@ -1,0 +1,241 @@
+---
+title: React 如何決定元件是 update 還是 unmount & mount ?
+tags: [REACT]
+category: NOTE
+readTime: 10
+desc: React 是如何決定在 re-render 中該元件可以重複利用? 還是應該 unmount 更新?, key 在 react 中又有什麼作用?
+date: '2022-03-31'
+---
+
+正如敘述所提到, react 在 re-render 的過程中如何決定哪些元件可以重複利用,
+哪些又是需要移除新增? key 在 react 中扮演什麼角色, 有什麼使用情境?
+整理一下之前看到的文章和自己的想法寫下這篇筆記
+
+要了解這個問題我們要先知道 react 是怎麼產生 element 的
+
+## React Element
+
+```js
+// <div className="paul" />
+{
+  type: 'div',
+  props: { className: 'paul' }
+}
+```
+
+如上面所示, 我們會用 **JSX** 來撰寫 html 元件, 實際上 react 會幫我們轉譯成 javascript 的 obj, 再透過 DOM 的 API 像是 **appendChild** 去產生 html 元件
+
+```js
+let node = document.createElement('div');
+node.className = 'paul';
+domContainer.appendChild(node);
+```
+
+接下來如果 re-render 的話 react 要怎麼知道什麼地方不一樣, 什麼地方可以重用, 哪些地方需要 unmount,
+從而去更新 dom node, 這個動作叫做 Reconciliation
+
+## Reconciliation
+
+假設今天 className 從 **paul** -> **wang**, 最簡單的方法就是把原本的元件移除, 然後新增一個新的元件
+
+```js
+let domContainer = document.getElementById('container');
+domContainer.innerHTML = '';
+let domNode = document.createElement('div');
+domNode.className = 'wang';
+domContainer.appendChild(domNode);
+```
+
+但這樣一看就知道很沒效率, 明明是同個類型的元件 (div), 卻把它清掉再去新增一個, 怎麼想都怪怪的
+
+而且清掉的話這個元件上的一些狀態也會遺失, 像是反白, focus, 或者 scroll 的狀態
+
+所以最好的方式應該是直接更新既有的元件
+
+```js
+paulDivNode.className = 'red';
+```
+
+但這個時候就會有一個問題, react 要怎麼知道這個元件是可以重複利用的？如果可以, 那麼就直接更新他,
+如果不行, 就清掉再新增一個
+
+結論是 react 會根據兩次 render 中**元件的出現順序**和**元件類型**去做決定
+
+```js
+// let domNode = document.createElement('div');
+// domNode.className = 'paul';
+// domContainer.appendChild(domNode);
+ReactDOM.render(
+  <div className="paul" />,
+  document.getElementById('container')
+);
+
+// 第二次 render className paul -> wang
+// 類型一樣且位置一樣嗎? 都是 div 所以可以重用
+// domNode.className = wang';
+ReactDOM.render(
+  <div className="wang" />,
+  document.getElementById('container')
+);
+
+// 第三次 render, 原本的位置變成 p, div !== p 所以不能重用
+// domContainer.removeChild(domNode);
+// domNode = document.createElement('p');
+// domNode.textContent = 'Paul Wang';
+// domContainer.appendChild(domNode);
+ReactDOM.render(
+  <p>Paul Wang</p>,
+  document.getElementById('container')
+);
+
+// 第四次把 p 的內容改掉 (p -> p)
+// domNode.textContent = 'Hey!!';
+ReactDOM.render(
+  <p>Hey!!</p>,
+  document.getElementById('container')
+);
+```
+
+有條件的時候也是這樣運作的, 我們可能會根據 state 要不要 render 元件
+
+```js
+ReactDOM.render(
+  <p>hello</p>,
+  document.getElementById('container')
+);
+
+ReactDOM.render(
+  <h1>hihihi</h1> // 第二次 render 中才出現
+  <p>hello</p>,
+  document.getElementById('container')
+);
+```
+
+這樣 p 的位置不一樣是不是只能移除再新增? 不是的, 上面的例子可以看成這樣
+
+```js
+function Component({ flag }) {
+  let content = null;
+  if (flag) {
+    content = <h1>hihihi</h1>;
+  }
+  return (
+    <>
+      {content}
+      <p>hello</p>
+    </>
+  );
+}
+```
+
+```js
+ReactDOM.render(
+  null,
+  <p>hello</p>,
+  document.getElementById('container')
+);
+
+ReactDOM.render(
+  <h1>hihihi</h1>
+  <p>hello</p>,
+  document.getElementById('container')
+);
+```
+
+p 的位置一樣, 所以可以重複利用原本的元件
+
+
+## Array
+
+再來講 array, 上面講了 react 是根據元件類型和位置去判斷是否可以重複利用原本的 instance
+
+但當如果是 render array 時情況就有點不同了, 因為列表的順序可能會有改動
+
+```js
+function List({ list }) {
+  return (
+    <div>
+      {list.map(item => (
+        <p>
+          name: {item.name}
+          <br />
+          <input />
+        </p>
+      ))}
+    </div>
+  )
+}
+```
+
+在這個情況下如果列表裡面的順序移動了, react 會發現元件的類型都一樣 (p & input), 也不知道我們有移動 array 的順序,
+所以會把每組元件做更新
+
+仔細想一想, 我只是移動位置, 其實還是原本的元件啊, 根本不必去做更新, 應該是用原本的元件換個位置而已
+
+所以這時候 **key** 就出現了, key 是用來告訴 react 説, 在每次 render 之間, 縱使你的位置在 parent element 內不同
+他在概念上還是一樣的
+
+```js
+function List({ list }) {
+  return (
+    <div>
+      {list.map(item => (
+        <p key={item.id}>
+          name: {item.name}
+          <br />
+          <input />
+        </p>
+      ))}
+    </div>
+  )
+}
+```
+
+這樣一來在每次 render 中, react 會比較 div 標籤內的 p 和 key attribute,
+假設有一樣的 key 的話 react 會直接重複用原本的 instance
+
+要特別注意的是 react 只會比較 parent 底下(div)的 key, 如果有兩個 key 相同, 但是被包在不同 parent 的話是不會有影響的
+
+也就是說如果 key 不一樣的時候, 縱使元件的位置和類別一樣, react 還是會 unmount 它重新 create 一個新的元件
+, 我們可以利用這個機制做一些方便的事情
+
+像是假設你現在需要根據 props 來決定要 render 不同圖片, 並且要有淡入的效果
+
+```js
+const imgObj = {
+  a: 'source1',
+  b: 'source2',
+}
+
+// 假設 flag 會是 a || b
+function Component({ flag }) {
+  return <Image src={imgObj[flag]} />
+}
+```
+
+你的 css 可能會這樣寫
+
+```js
+animation-name: FadeIn;
+animation-duration: 0.8s;
+animation-timing-function: ease-in-out;
+animation-fill-mode: forwards;
+```
+
+但是這樣你會發現只有第一次 render 時才有淡入效果, flag 改變時 react 知道 **Image** 可以重複利用,
+所以只更新了 src 這個 attribute
+
+除了改成直接 render 兩個圖片, 根據 flag 去改變該圖片的 opacity, 其實也可以用 key 讓 react 強迫他更新
+
+```js
+function Component({ flag }) {
+  return <Image key={flag} src={imgObj[flag]} />
+}
+```
+
+以上就是這次的筆記, 基本上是參考 Dan 的文章, 在這邊做個紀錄
+
+## Reference
+
+- [React as a UI Runtime](https://overreacted.io/react-as-a-ui-runtime/)
+

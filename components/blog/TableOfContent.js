@@ -9,7 +9,7 @@ const Root = styled.div`
 
   ${MEDIA_QUERY_LG} {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex-direction: column;
     padding: 20px;
     width: 250px;
@@ -40,7 +40,7 @@ const SubTitleLink = styled.div`
   font-size: 18px;
   cursor: pointer;
   position: relative;
-  text-align: center;
+  text-align: start;
 
   ::after {
     content: '';
@@ -81,7 +81,7 @@ const TableOfContent = () => {
 
   return (
     <Root>
-      <Title>目錄</Title>
+      <Title>Content</Title>
       <SeparateLine />
       {contents.map((contentDOM) => (
         <SubTitleLink
