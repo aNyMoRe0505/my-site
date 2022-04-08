@@ -164,6 +164,7 @@ const skillTags = [
   'NEXT.JS',
   'NODE.JS',
   'MYSQL',
+  'GRAPHQL',
 ];
 
 const About = () => {

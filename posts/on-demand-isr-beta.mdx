@@ -1,0 +1,122 @@
+---
+title: On Demand ISR 終於 beta 了！！
+tags: [REACT, NEXT.JS]
+category: NOTE
+readTime: 5
+desc: Next.js 終於在 12.1 版本推出 on demand ISR, 在這篇簡單整理一下~
+date: '2022-04-08'
+---
+
+Next.js 終於在 [12.1](https://nextjs.org/blog/next-12-1#on-demand-incremental-static-regeneration-beta) 推出 on demand ISR 的功能, 讓 developer 可以主動去觸發更新 static page,
+而不是設定 revalidate time 去觸發, 簡單筆記一下這個功能到底在幹嘛吧~~
+
+再繼續看之前可以先把下面兩篇複習一下
+
+- [淺談 getInitialProps, getServerSideProps Part1](/blog/getinitialprops-and-getserversideprops-part1)
+- [淺談 getInitialProps, getServerSideProps Part2](/blog/getinitialprops-and-getserversideprops-part2)
+
+## ISR 
+
+ISR - Incremental Static Regeneration
+
+當初 Next.js 為了解決 SSG 的內容 (getStaticProps) 需要改動時, 整個網站就必須重新上版的缺點, 讓開發者可以設定 **revalidate time**,
+表明一但超過這個時間, 下一次使用者再次進來該頁面, next.js 會在背景重 build 這頁面, 當這個頁面重新 build 完後, 下次使用者進來就會看到新的頁面！
+
+這個功能很棒, 但還是有一些缺點
+
+1. 只能設定 revalidate time 來決定 re-build 的時機
+2. 沒辦法知道何時 re-build 完成
+3. 只有使用者第一次直接到該頁面才會觸發 revalidate, next/link next/router routing 過去的不會觸發
+
+實際上的情況有很多, 該捨棄 SEO 用 CSR 去 render 頁面, 讓使用者總是可以看到最新的資料?
+還是捨棄一點效能用 getServerSideProps 讓使用者可以看到最新內容又有益於 SEO? 又或者用 getStaticProps 加上 revalidate time?
+如果用這個方法, 那 revalidate time 該設定多久? 縱使設定成 1 秒還需要擔心第 3 點, 如果沒有使用者直接用網址到達該頁, 這頁也永遠不會 re-build,
+而且說不定資料也沒更新, 從而浪費 server 的資源
+
+這個時後 on demand ISR 出現了, 現在我們可以利用 Next.js 原先就支援的 [API Routes](https://nextjs.org/docs/api-routes/introduction),
+來創建出一隻 API 去觸發 revalidate, Next.js 將這個方法新增到 **res** obj 底下, 目前可以利用 **res.unstable_revalidate** 去觸發想要 revalidate 的頁面
+
+[leerob](https://github.com/leerob) 也建立了一個 [demo](https://on-demand-isr.vercel.app/) 來展示這個強大的功能
+
+在這個 demo 中, leerob 結合了 github webhook 的功能, 一但創建一個 issue 或者是留言, github 會打一個我們自己寫好的 api, 在這個範例中就是事先寫好的 [api route](https://github.com/leerob/on-demand-isr/blob/main/pages/api/webhook.js)
+
+而這個 api 的內容正是去調用 **res.unstable_revalidate** 去更新首頁
+
+```js
+export default async function handleWebhook(req, res) {
+  // verify the webhook signature request against the
+  // unmodified, unparsed body
+  const body = await getRawBody(req);
+  if (!body) {
+    res.status(400).send('Bad request (no body)');
+    return;
+  }
+
+  const jsonBody = JSON.parse(body);
+
+  // compute our signature from the raw body
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+  const signature = req.headers['x-hub-signature-256'];
+  const computedSignature =
+    'sha256=' + createHmac('sha256', secret).update(body).digest('hex');
+
+  if (computedSignature === signature) {
+    console.log(
+      'event',
+      req.headers['x-github-event'],
+      'action',
+      jsonBody.action,
+      'issue',
+      jsonBody.issue?.title,
+      jsonBody.issue?.number
+    );
+
+    const issueNumber = jsonBody.issue?.number;
+
+    // issue opened or edited
+    // comment created or edited
+    console.log('[Next.js] Revalidating /');
+    await res.unstable_revalidate('/');
+    if (issueNumber) {
+      console.log(`[Next.js] Revalidating /${issueNumber}`);
+      await res.unstable_revalidate(`/${issueNumber}`);
+    }
+
+    return res.status(200).send('Success!');
+  } else {
+    return res.status(403).send('Forbidden');
+  }
+}
+```
+
+相信也不難理解, 非常直觀, 驗證成功後就去執行 **await res.unstable_revalidate('/');**, 也就是去更新首頁, 如此一來下次進來就會是更新過後的頁面.
+
+這樣開發者就可以自己決定什麼時候該去 revalidate page, 也可以配合一些 CMS 在文章新增或更新後去觸發, 增加了許多可能性
+
+又或者也可以自己寫一個 customize server 去定期觸發 revalidate, 避免以前設定 revalidate time 時, 只有第一次 landing 到頁面才會觸發的窘境
+
+當初我自己特別關注這功能的原因是, 目前工作中的專案 deploy 流程會是由 SRE team 負責, 專案中的環境變數會是由 k8s 啟動 server 時暴露出來
+
+這個時候就出現了一個問題, 如果某個頁面採用 getStaticProps strategy, 我們在 build time 的時候是**無法知道由 SRE 控管的環境變數**
+
+這件事情造成我們只能讓每個頁面都使用 getServerSideProps (因為每次 request 都會讓 server 產生 html, 這個時候是拿得到環境變數的)
+
+這就對我們的專案造成效能上的影響, 但 on demand ISR 出現後, 我就可以想一個 workflow 像是在第一次 build 完啟動 server 後, 再去 revalidate page 一次,
+這個時候 build 出來的頁面就會有正確的環境變數！, 這當然還牽涉到一些狀況處理, 像是如果該頁面還沒 build 完時, user 該導到哪裡之類的,
+我們會在這個功能 stable 後去進行 implement
+
+總而言之 on demand ISR 的出現, 讓開發者可以更彈性的去決定何時 revalidate page, 之後就期待 stable 的那一天XD
+
+## Reference
+
+- [Ｎext.js 12.1](https://nextjs.org/blog/next-12-1#on-demand-incremental-static-regeneration-beta)
+
+
+
+
+
+
+
+
+
+
