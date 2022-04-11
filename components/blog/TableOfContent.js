@@ -12,7 +12,7 @@ const Root = styled.div`
     align-items: flex-start;
     flex-direction: column;
     padding: 20px;
-    width: 250px;
+    width: 300px;
     height: fit-content;
     margin-left: 80px;
     background-color: black;
@@ -25,11 +25,11 @@ const Root = styled.div`
 `;
 
 const Title = styled.div`
-  font-size: 20px;
+  font-size: 18px;
 `;
 
 const SeparateLine = styled.div`
-  width: 80%;
+  width: 100%;
   height: 3px;
   background-color: black;
   border-radius: 4px;
@@ -37,7 +37,7 @@ const SeparateLine = styled.div`
 `;
 
 const SubTitleLink = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   position: relative;
   text-align: start;

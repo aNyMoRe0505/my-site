@@ -119,7 +119,7 @@ const Blog = ({ posts }) => {
     send({ keyword: keywordRef.current }).then((result) => {
       setArticles(result);
       setOffset(0);
-      setIsFetchingEnd(false);
+      setIsFetchingEnd(result.length !== ARTICLE_LIMIT);
       window.scroll({ top: 0, left: 0, behavior: 'smooth' });
     });
   }, [loadingRef, keywordRef, send]);
@@ -131,12 +131,9 @@ const Blog = ({ posts }) => {
       const newOffset = offsetRef.current + ARTICLE_LIMIT;
       send({ keyword: keywordRef.current, offset: newOffset }).then(
         (result) => {
-          if (!result.length) {
-            setIsFetchingEnd(true);
-          } else {
-            setArticles((prev) => [...prev, ...result]);
-            setOffset(newOffset);
-          }
+          setArticles((prev) => [...prev, ...result]);
+          setOffset(newOffset);
+          setIsFetchingEnd(result.length !== ARTICLE_LIMIT);
         }
       );
     };

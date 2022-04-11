@@ -1,0 +1,164 @@
+---
+title: Stacking Context 和 z-index
+tags: [WEB, CSS]
+category: NOTE
+readTime: 12
+desc: 以前在做 layout 排版時遇到堆疊的情況都是改 css 去 try and error, 在這邊幫自己複習一下相關概念
+date: '2022-04-11'
+---
+
+## Stacking without z-index
+
+首先提一下在正常狀態下 (沒有 z-index) 的情況, 元件會怎麼堆疊, 從下到上的規則是
+
+1. 根元素 (root element)
+2. 根元素裡 **non-positioned** 的元素, 並按照 html 中出現的順序
+3. 根元素裡 **positioned** 的元素, 並按照 html 中出現的順序
+
+只要元素 css **position** 屬性的值不是 **static** (預設值), 就是 **positioned** 元素 (relative, fixed, sticky, absolute)
+
+以下是我從 [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/Stacking_without_z-index) 拿的範例, 可以發現 Element 5 在 html 順序中雖然是在最後面, 但因為它是 **non-positioned** 元素, 所以會被蓋過去
+
+<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking without the z-index MDN" src="https://codepen.io/anymore0505/embed/popKYoP?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+  See the Pen <a href="https://codepen.io/anymore0505/pen/popKYoP">
+  Stacking without the z-index MDN</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
+  on <a href="https://codepen.io">CodePen</a>.
+</iframe>`} />
+
+## Stacking with z-index
+
+如果想要自己另外決定堆疊順序的話, 就可以使用 **z-index** 來決定順序, 特別注意的是 z-index 只對 **positioned** 的元素有用
+
+數字越大就會在越上面, 如果數字相同的話就依照沒有 z-index 時的堆疊規則
+
+以下也是從 [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/Adding_z-index) 來的
+
+<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking with z-index (from MDN)" src="https://codepen.io/anymore0505/embed/YzYvgBw?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+  See the Pen <a href="https://codepen.io/anymore0505/pen/YzYvgBw">
+  Stacking with z-index (from MDN)</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
+  on <a href="https://codepen.io">CodePen</a>.
+</iframe>`} />
+
+## The Stacking Context
+
+那什麼是 **Stacking Context** ? 在前面我們已經知道如果對 positioned 的元素加上 z-index 會對堆疊順序有所影響, 這都是因為其實他們在背後形成了 stacking context
+
+我們先來看看什麼情形會建立 stacking context
+
+1. 當元素是網頁根元素 (其實就是 html)
+2. 當元素被設定 position **absolute** 或 **relative**, 然後 z-index 設定為除了 auto 以外的值
+3. 當元素被設定 position **fixed** 或 **sticky**
+4. 當父元素是 **flex container** 或 **grid container**, 然後 z-index 設定為除了 auto 以外的值
+5. 當元素設定了 opacity 且值小於 1
+
+其他還有比較少見到的情況這裡就先不筆記了, 有興趣可以去查閱 MDN
+
+只要產生了 stacking context, 那麼堆疊的順序就會由前面所解釋的方式去進行, 總結來說會是這個順序
+
+1. 執行堆疊的根元素
+2. **positioned** 的元素, 且 z-index 為負數
+3. **non-positioned** 的元素
+4. **positioned** 的元素, 且 z-index 為 **auto**
+5. **positioned** 的元素, 且 z-index 為 正數
+
+只要搞懂 stacking context 如何產生以及排序的規則, 我們在排版的時候腦內就會有更清楚的架構,
+或是當設定 z-index 時的結果不符合預期時, 大概可以猜測在上層元素中說不定有元素已經產生了 stacking context 了
+
+來看看幾個例子, 下面這個也是從 MDN 來的
+
+<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking context from mdn" src="https://codepen.io/anymore0505/embed/popKBVB?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+  See the Pen <a href="https://codepen.io/anymore0505/pen/popKBVB">
+  Stacking context from mdn</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
+  on <a href="https://codepen.io">CodePen</a>.
+</iframe>`} />
+
+可以發現 DIV3 自己產生了 stacking context, 所以 DIV4, DIV5, DIV6 就會在 DIV3 內根據規則排序,
+DIV3 內的元素排序完成後, 整個 DIV3 才會跟 DIV1, DIV2 去做相對應的排序
+
+如果將 DIV3 的 **z-index** 移除, 也就是說不符合形成 stacking context 的規則的話, 就會變成以下這樣
+
+<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking context 2" src="https://codepen.io/anymore0505/embed/xxpzeQE?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+  See the Pen <a href="https://codepen.io/anymore0505/pen/xxpzeQE">
+  Stacking context 2</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
+  on <a href="https://codepen.io">CodePen</a>.
+</iframe>`} />
+
+因為 DIV3 沒有形成 stacking context, 所以這幾個元素都隸屬於同個 stacking context (html)
+
+再來看相關的例子, 我是從 andyou 的 [blog](https://andyyou.github.io/2016/03/03/z-index/) 中看到的
+
+<Codepen src={`<iframe height="300" style="width: 100%;" scrolling="no" title="Untitled" src="https://codepen.io/andyyou/embed/ZWGvwV?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+  See the Pen <a href="https://codepen.io/andyyou/pen/ZWGvwV">
+  Untitled</a> by andyyou (<a href="https://codepen.io/andyyou">@andyyou</a>)
+  on <a href="https://codepen.io">CodePen</a>.
+</iframe>`} />
+
+html 的結構是以下這樣
+
+```js
+div
+  span class="red" RED
+div
+  span class="green" GREEN
+div
+  span class="blue" BLUE
+
+.red, .green, .blue {
+  width: 100px;
+  color: white;
+  line-height: 100px;
+  text-align: center;
+  position: absolute;
+}
+
+.red {
+  z-index: 1;
+  background: red;
+  top: 20px;
+  left: 20px;
+}
+
+.green {
+  background: green;
+  top: 40px;
+  left: 40px;
+}
+
+.blue {
+  background: blue;
+  top: 60px;
+  left: 60px;
+}
+```
+
+把第一個 span 的 z-index 設定成1, 讓它顯示在最上面
+
+作者給了一個挑戰是試看看能不能把紅色區塊的 span 排到藍色和綠色 span 的後面，但要遵循下面的規則。
+
+- 不能修改 HTML 結構
+- 不能加入或修改任何元素的 z-index
+- 不能加入或修改任何 position 屬性
+
+最後解答是加入一個小於 1 的 opacity 到紅色 span 的爸爸元素即 div, 相信到這裡大家也應該能馬上明白為什麼,
+**opacity < 1** 正是建立 stacking context 中的一個條件
+
+<Codepen src={`<iframe height="300" style="width: 100%;" scrolling="no" title="Untitled" src="https://codepen.io/andyyou/embed/oxXEvx?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+  See the Pen <a href="https://codepen.io/andyyou/pen/oxXEvx">
+  Untitled</a> by andyyou (<a href="https://codepen.io/andyyou">@andyyou</a>)
+  on <a href="https://codepen.io">CodePen</a>.
+</iframe>`} />
+
+## Reference
+
+- [Stacking Context](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context)
+- [深入 css z-index 屬性](https://andyyou.github.io/2016/03/03/z-index/)
+
+
+
+
+
+
+
+
+
+
