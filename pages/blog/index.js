@@ -93,6 +93,15 @@ const Flag = styled.div`
   left: 0;
 `;
 
+const Mask = styled.div`
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-color: #ffffffa3;
+  top: 0;
+  left: 0;
+`;
+
 const ARTICLE_LIMIT = 5;
 
 const fetchArticle = async ({ keyword = '', offset = 0 } = {}) => {
@@ -203,6 +212,7 @@ const Blog = ({ posts }) => {
       <StyledRightSectionWrapper>
         {MemoizeRightSection}
         <Flag ref={fetchMoreRef} />
+        {loading && <Mask />}
       </StyledRightSectionWrapper>
     </RootWrapper>
   );
