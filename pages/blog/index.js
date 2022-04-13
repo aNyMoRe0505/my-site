@@ -160,13 +160,13 @@ const Blog = ({ posts }) => {
   }, [send, keywordRef, offsetRef, loadingRef, isFetchingEnd]);
 
   const MemoizeRightSection = useMemo(() => {
-    const delaySec = isMounted() ? 0 : 0.8;
+    const mounted = isMounted();
     return (
       <>
         {articles.length ? (
           articles.map((article, index) => (
             <Fragment key={article.fileName}>
-              <ArticleBlock $delay={delaySec + index * 0.1}>
+              <ArticleBlock $isMounted={mounted} $delay={0.8 + index * 0.1}>
                 <TimeBlock>
                   <MinuteText>{article.data.readTime} Mins Read</MinuteText>
                   <DateText>
@@ -186,7 +186,7 @@ const Blog = ({ posts }) => {
                   </LinkButton>
                 </LearnBlock>
               </ArticleBlock>
-              <SeparateLine $delay={delaySec + index * 0.1} />
+              <SeparateLine $isMounted={mounted} $delay={0.8 + index * 0.1} />
             </Fragment>
           ))
         ) : (

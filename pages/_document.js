@@ -41,6 +41,8 @@ class MyDocument extends Document {
           <link rel="icon" type="image/x-icon" href="/favicon.png" />
           <link rel="preconnect" href="https://fonts.gstatic.com" />
           <link rel="preconnect" href="https://i.imgur.com" />
+          <link rel="preconnect" href="https://codepen.io" />
+          <link rel="preconnect" href="https://cpwebassets.codepen.io" />
           <link
             rel="preload"
             href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Sans:wght@400;700&display=swap"

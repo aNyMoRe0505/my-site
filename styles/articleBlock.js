@@ -1,17 +1,21 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import Link from '@/components/Link';
 import { MEDIA_QUERY_MD } from '@/constants/breakpoint';
 import { FadeFromRightAnimation } from '@/styles/mainStyle';
+
+const FadeFromRightCSS = css`
+  opacity: 0;
+  animation: ${FadeFromRightAnimation} 0.5s ease
+    ${(props) => (props.$isMounted ? 0 : props.$delay)}s forwards;
+`;
 
 export const ArticleBlock = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   word-break: break-word;
-  opacity: 0;
-  animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
-    forwards;
+  ${FadeFromRightCSS}
 
   ${MEDIA_QUERY_MD} {
     justify-content: space-between;
@@ -24,9 +28,7 @@ export const SeparateLine = styled.div`
   height: 1px;
   background-color: #e4e3e3;
   margin: 30px 0;
-  opacity: 0;
-  animation: ${FadeFromRightAnimation} 0.5s ease ${(props) => props.$delay}s
-    forwards;
+  ${FadeFromRightCSS}
 `;
 
 export const TimeBlock = styled.div`
