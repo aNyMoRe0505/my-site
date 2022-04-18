@@ -4,7 +4,7 @@ import Link from '@/components/Link';
 import { MEDIA_QUERY_MD } from '@/constants/breakpoint';
 import { FadeFromRightAnimation } from '@/styles/mainStyle';
 
-const FadeFromRightCSS = css`
+export const FadeFromRightCSS = css`
   opacity: 0;
   animation: ${FadeFromRightAnimation} 0.5s ease
     ${(props) => (props.$isMounted ? 0 : props.$delay)}s forwards;
