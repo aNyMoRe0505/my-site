@@ -1,13 +1,226 @@
 ---
-title: 談談 Apollo Cache (WIP)
-tags: [WEB]
+title: 談談 Apollo Cache
+tags: [GraphQL]
 category: NOTE
-readTime: 15
-desc: 筆記一下以前遇到 Apollo Cache 的問題 (WIP, 尚未寫完)
-date: '2022-04-15'
+readTime: 8
+desc: 筆記一下以前遇到 Apollo Cache 的問題
+date: '2022-04-18'
 ---
 
-草稿階段
+Apollo Client 其中一個功能就是快取, 藉由設定 [fetch policy](https://www.apollographql.com/docs/react/data/queries/#supported-fetch-policies) 來降低發送需求的數量,
+之前在專案使用時碰到了一些問題, 在這邊紀錄一下
+
+## Apollo Client 如何快取
+
+要先探討快取問題首先應該要知道的是 Apollo Client 是怎麼進行快取的
+
+```js
+[{
+  id: 1
+  title: hello
+  __typename: Article
+}, {
+  id: 2
+  title: hello2
+  __typename: Article
+}]
+```
+
+假設有一隻 API 拉文章, 回傳的格式大概會是上面那樣子, [__typename](https://www.apollographql.com/docs/apollo-server/schema/schema/#the-__typename-field)
+是 Apollo 內部自己自動產生的 (根據後端設計 API type 決定)
+
+Apollo 的快取就是根據 **id** 以及 **__typename** 進行, 下次 request 如果發現有相同的 id & __typename 就不會再次發送 request, 而是用前一次的結果
+
+但是有時候在設計後端 schema 的時候不一定會想要把 id 當作 unique primary key, 像是可能會用身分證字號當作 primary key
+
+```js
+Member {
+  idCardNumber: string;
+  name: string;
+}
+```
+
+像是上面那樣, 可能會是用 **idCardNumber** 來當作 primary key, 但前面提到 Apollo 快取是根據 **id** 以及 **__typename**, 如果後端回傳格式沒有 id,
+那麼 Apollo 就無法進行快取了
+
+這時候要馬拜託後端把它改成 id (不太可能XD), 要馬就是在前端建立 Apollo instance 的時候客製化想要的 cache ID,
+在建立 **InMemoryCache** 時可以傳入 **typePolicies** 來決定某個 __typename 要的 cache ID 是什麼, 如果是上面的例子就會是這樣
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Member: {
+      keyFields: ["idCardNumber"],
+    },
+  },
+});
+```
+
+這樣 apollo 在遇到 **Member** 這個型別時就會用 **idCardNumber** 當作快取依據了, 更詳細的可以參考[這邊](https://www.apollographql.com/docs/react/caching/cache-configuration/#customizing-cache-ids)
+
+## 多對多的資料庫設計
+
+你可能會納悶說怎麼突然提到這個XD 因為我所碰到的快取問題是從**多對多的資料庫設計**產生的
+
+假設今天要設計資料庫, 規格是產品會有多個顏色, 其中會有一個主要顏色, 而顏色不一定只屬於特定產品, 其他產品可能也會有同個顏色
+
+這個時候應該就會往多對多的方向去設計, 從而產生三張表
+
+```js
+Product {
+  id: number;
+  name: string;
+}
+
+Color {
+  id: number;
+  name: string;
+}
+
+ProductColor {
+  productId: number;
+  colorId: number;
+  isPrimary: boolean;
+}
+```
+
+看起來沒有問題, 拉取資料時再進行 join 的動作就可以了, 前端預期拉資料回來的樣子大概會是這樣
+
+```js
+{
+  data: {
+    products: [
+      {
+        id: 1,
+        name: '產品一',
+        colors: [
+          {
+            id: 1,
+            name: 'Red',
+            isPrimary: true,
+            __typename: 'Color',
+          },
+          {
+            id: 2,
+            name: 'Yellow',
+            isPrimary: false,
+            __typename: 'Color',
+          },
+        ]
+        __typename: 'Product'
+      },
+      {
+        id: 2,
+        name: '產品二',
+        colors: [
+          {
+            id: 1,
+            name: 'Red',
+            isPrimary: false,
+            __typename: 'Color',
+          },
+          {
+            id: 3,
+            name: 'Blue',
+            isPrimary: true,
+            __typename: 'Color',
+          },
+        ]
+        __typename: 'Product'
+      },
+    ],
+  } 
+}
+```
+
+有兩個產品分別是**產品一** 和 **產品二**. **產品一**有兩個顏色分別是紅和黃, 其中主要顏色是紅色,
+**產品二**有兩個顏色分別是紅和藍, 其中主要顏色是藍色
+
+那麼 Apollo 會如何進行快取呢?
+
+1. 產品一的 **Product** 和 **Color** 內的 **id** 和 **__typename** 在快取內都不存在, 於是把產品一和兩種顏色 (紅和黃) 丟進快取內
+2. 產品二雖然不在快取內, 但是產品二中有紅色的快取(相同 **id** 和 **__typename**), 所以**產品二的紅色會重複利用產品一的紅色 Object**, 至於藍色因為沒出現過所以會把這次結果丟進快取, 也會把產品二丟進快取
+
+看出問題了嗎？**產品二會重複利用產品一出現的紅色造成主要顏色錯誤**, 實際上前端拿到的產品二會是
+
+```js
+      {
+        id: 2,
+        name: '產品二',
+        colors: [
+          {
+            id: 1,
+            name: 'Red',
+            isPrimary: true, // <-- 這裡重複用了產品一的紅色, 所以 isPrimary 會是 true
+            __typename: 'Color',
+          },
+          {
+            id: 3,
+            name: 'Blue',
+            isPrimary: true,
+            __typename: 'Color',
+          },
+        ]
+        __typename: 'Product'
+      },
+```
+
+由於快取的關係導致回來的資料不符合預期, 產品二有了兩個主要顏色, 不過照理來說同樣的 id 本應得到相同的結果, 不然就不叫做 id 了
+
+在這個問題中最佳的解法應該是後端要更改產品回傳的 schema, 將 isPrimary 移除，回傳的欄位多新增一個 primaryColor
+
+```js
+type Color {
+  id: number;
+  name: string;
+}
+
+type Product {
+  id: number;
+  name: string;
+  colors: Color[];
+  primary_color: Color;
+}
+```
+
+但是有可能後端系統的架構很複雜導致更改困難或者有其他難處, 在前端我們可以選擇不要快取 Color, 前面提到我們是利用 id 以及 __typename 進行快取, 那麼我們只要把 id 或者 __typename 移除就可以了
+
+```js
+// alias id as something else
+{
+  products {
+    id
+    name
+    colors {
+      colorId: id
+      name
+      isPrimary
+    }
+  }
+}
+
+// exclude __typename field
+{
+  products {
+    id
+    name
+    colors {
+      id
+      name
+      isPrimary
+      __typename @skip(if: true)
+    }
+  }
+}
+```
+
+## Reference
+
+- [Elusive Bugs with GraphQL Object Caching in Apollo Client](https://kamranicus.com/graphql-apollo-object-caching/)
+
+
+
+
 
 
 
