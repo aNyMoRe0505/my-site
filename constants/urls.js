@@ -3,6 +3,7 @@ const URLS = {
   ABOUT: '/about',
   BLOG: '/blog',
   BLOG_DETAIL: '/blog/[slug]',
+  ARCHIVES: '/archives',
 };
 
 export default URLS;

@@ -193,6 +193,10 @@ const links = [
     text: 'Blog',
     pathname: URLS.BLOG,
   },
+  {
+    text: 'Archives',
+    pathname: URLS.ARCHIVES,
+  },
 ];
 
 const Header = () => {

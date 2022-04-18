@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Fragment } from 'react';
 import styled from 'styled-components';
 
+import { MEDIA_QUERY_MD } from '@/constants/breakpoint';
 import URLS from '@/constants/urls';
 import {
   ArticleBlock,
@@ -27,6 +28,14 @@ import {
 
 import { getPosts } from './api/articles';
 
+const StyledSubText = styled(SubText)`
+  text-align: center;
+
+  ${MEDIA_QUERY_MD} {
+    text-align: left;
+  }
+`;
+
 const ExploreButton = styled(LinkButton)`
   margin: 0 0 0 auto;
   display: block;
@@ -41,7 +50,7 @@ const Home = ({ posts }) => {
     <RootWrapper>
       <LeftSection>
         <Title>What&apos;s News?</Title>
-        <SubText>想到什麼就寫什麼, 通常是筆記, 萬年不更新</SubText>
+        <StyledSubText>想到什麼就寫什麼, 通常是筆記, 萬年不更新</StyledSubText>
       </LeftSection>
       <RightSection>
         {posts.map((article, index) => (
