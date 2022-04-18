@@ -4,6 +4,16 @@ import path from 'path';
 
 export const POSTS_PATH = path.join(process.cwd(), 'posts');
 
+const allPostFileName = fs.readdirSync(POSTS_PATH);
+
+const ALL_POSTS = allPostFileName
+  .map((fileName) => {
+    const source = fs.readFileSync(path.join(POSTS_PATH, fileName));
+    const { data, content } = matter(source);
+    return { data, content, fileName: fileName.replace('.mdx', '') };
+  })
+  .sort((a, b) => +new Date(b.data.date) - +new Date(a.data.date));
+
 export const getPosts = ({
   limit,
   offset = 0,
@@ -11,13 +21,7 @@ export const getPosts = ({
   category,
   keyword,
 } = {}) => {
-  const allPostFileName = fs.readdirSync(POSTS_PATH);
-
-  let posts = allPostFileName.map((fileName) => {
-    const source = fs.readFileSync(path.join(POSTS_PATH, fileName));
-    const { data, content } = matter(source);
-    return { data, content, fileName: fileName.replace('.mdx', '') };
-  });
+  let posts = ALL_POSTS;
 
   if (category) posts = posts.filter((post) => post.data.category === category);
 
@@ -33,8 +37,6 @@ export const getPosts = ({
       post.data.title.toLowerCase().includes(keyword.toLowerCase())
     );
   }
-
-  posts = posts.sort((a, b) => +new Date(b.data.date) - +new Date(a.data.date));
 
   if (limit) posts = posts.slice(+offset, +offset + +limit);
 
