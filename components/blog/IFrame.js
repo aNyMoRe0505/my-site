@@ -6,7 +6,7 @@ const Wrapper = styled.div`
   margin: 0 0 20px 0;
 `;
 
-const Codepen = ({ src }) => {
+const IFrame = ({ src }) => {
   return (
     <Wrapper>
       <div dangerouslySetInnerHTML={{ __html: src }} />
@@ -14,8 +14,8 @@ const Codepen = ({ src }) => {
   );
 };
 
-Codepen.propTypes = {
+IFrame.propTypes = {
   src: PropTypes.string.isRequired,
 };
 
-export default Codepen;
+export default IFrame;

@@ -1,0 +1,204 @@
+---
+title: 瀏覽器的 composition event
+tags: [WEB, JS]
+category: NOTE
+readTime: 15
+desc: 筆記一下以前遇到 composition event 的奇怪 issue
+date: '2022-04-25'
+---
+
+在處理一些 input 功能時可能會碰到 [composition event](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent),
+會在使用者組字的時候觸發, 就像中文是用注音組起來的
+
+其中一個應用場景像是搜尋視窗, 輸入字後會推薦類似的關鍵字, 如果這個 input 支援鍵盤的上下左右選擇推薦關鍵字的話, 我們在選字的時候就會觸發不預期的行為,
+這個時候就要判斷 composition event 來避免這個 issue
+
+## Composition Event
+
+可以先用以下的例子玩玩看, 觀察 log 出現的時機, 我在 input 上面分邊加上了 **onChange**, **onCompositionStart**, **onCompositionUpdate**, **onCompositionEnd** 這幾個事件
+
+<IFrame src={`<iframe src="https://codesandbox.io/embed/composition-raw-t8p6t?fontsize=14&hidenavigation=1&theme=dark"
+     style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+     title="composition raw"
+     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+   ></iframe>`} />
+
+特別想講的是, 可以分別用 Chrome & Firefox & Safari 玩玩看, 會發現事件出現的順序不太一樣, 當輸入**你**時
+
+Chrome
+1. compositionstart:  
+2. compositionupdate:  
+3. onChange value ㄋ 
+4. compositionupdate: ㄋ 
+5. onChange value ㄋㄧ 
+6. compositionupdate: ㄋㄧ 
+7. onChange value 你 
+8. compositionupdate: 你
+9. compositionend: 你 
+
+Firefox
+1. compositionstart:  
+2. compositionupdate:  
+3. onChange value ㄋ 
+4. compositionupdate: ㄋ 
+5. onChange value ㄋㄧ 
+6. compositionupdate: ㄋㄧ 
+7. onChange value 你 
+8. compositionend: 你 
+
+Safari
+1. compositionstart:  
+2. compositionupdate:  
+3. onChange value ㄋ 
+4. compositionupdate: ㄋ 
+5. onChange value ㄋㄧ 
+6. compositionupdate: ㄋㄧ 
+7. onChange value 你 
+8. onChange value "" 
+9. onChange value 你 
+10. compositionend: 你 
+
+會發現這三家瀏覽器對於 composition event 的順序以及數量完全不一樣XD, 稍微簡化一下把前六步省去 (都一樣)
+
+Chrome 
+1. onChange value 你 
+2. compositionupdate: 你
+3. compositionend: 你 
+
+Firefox
+1. onChange value 你 
+2. compositionend: 你 
+
+Safari
+1. onChange value 你 
+2. onChange value "" 
+3. onChange value 你 
+4. compositionend: 你
+
+稍微整理一下
+- 最後都是觸發拼字完成事件 **compositionend**
+- **Safari** 不知道怎麼回事會多觸發兩次 **onChange** 
+- 只有 **Chrome** 會在最後拼字成功時再觸發一次 **compositionupdate** (**onChange** 之前)
+
+其實就算再怎麼怪, 平常實作沒遇到問題應該都不會注意到
+
+那你問我為什麼要研究這個？當然是因為我碰到了某個坑居然跟這些順序事件有關(我的天), 原本是想查相關文件找說為什麼每家瀏覽器不一樣,
+但這個事件相關的資料實在太少, 我猜可能是因為只有會需要組字的國家才會碰到的關係QQ, 總之先對這些差異有印象, 讓我來說說我遇到了什麼坑
+
+## 奇怪的 BUG
+
+事件的起因是我需要實作一個 input, 使用者可以輸入數字, 並且會幫 user 自動在千分位上加上逗點 (ex: 1,000), 在需要輸入金額的網站上應該蠻常見的
+
+直覺上先直接在 **onChange** 的事件中把 value 中的 **,** 去掉, 在轉成數字並用 [toLocaleString](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString#examples)
+加上逗號, 可以直接看以下這份 codesandbox
+
+<IFrame src={`<iframe src="https://codesandbox.io/embed/composition-fail-lfkqr?fontsize=14&hidenavigation=1&theme=dark"
+     style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+     title="composition fail"
+     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+   ></iframe>`} />
+
+OK, 一切沒問題, 當我非常有信心時, QA 居然發了一個 bug ticket 給我, 內容是當使用 windows 系統且在中文輸入法下使用鍵盤右側數字, 輸入到 1000 時會變成 10,000
+
+蛤, 我當下看到 ticket 時候真的在座位上蛤了一聲XD, 覺得這到底殺小, 我只好起身走到共用的 windows 電腦嘗試 reproduce 這個問題
+
+不試還好, 試了還發現真的會 XDDDD, 大家可以用以上的 codesandbox 試試看, 並觀察 log
+
+**會發現在中文輸入法的狀況下使用鍵盤右側的數字鍵, 雖然實際上沒有組字但卻會觸發 composition event**, 而且順序跟上面提到的不太一樣..
+
+還發現只有在 **Chrome** 才會發生, Firefox 並不會
+
+用 Firefox 從 100 再按下一個 0 時, log 會是這樣 (可能之後補 GIF || VIDEO)
+
+1. compositionstart 100
+2. compositionupdate 100
+3. compositionend 1000
+4. onChange value 1,000
+
+來對照最原本輸入**你**的時候 Firefox 會是怎樣
+
+1. compositionstart:  
+2. compositionupdate:  
+3. onChange value ㄋ 
+4. compositionupdate: ㄋ 
+5. onChange value ㄋㄧ 
+6. compositionupdate: ㄋㄧ 
+7. onChange value 你 
+8. compositionend: 你
+
+由於其實不是組字, 所以會直接觸發 compositionend (不用按下 enter) 後才觸發 onChange
+
+Chrome 的話, 在還沒到千分位的時候假設先輸入 **1** log 會是這樣
+
+1. compositionstart
+2. compositionupdate
+3. onChange value 1
+4. compositionupdate 1
+5. compositionend: 1
+
+會發現這裡就會跟輸入中文的時候一樣, 會先 onChange -> compositionupdate -> compositionend
+
+那從 100 再輸入一個 0 的話 log 會是如何呢 ?
+
+1. compositionstart 100
+2. compositionupdate 100
+3. onChange value 1,000
+4. onChange value 10,000
+
+會發現 **onChange** 多觸發一次, 且 **compositionupdate** 和 **compositionend** 都沒觸發到
+
+後來我做了一個假設 (以下都是自己的假設, 沒有 spec 可以證明, 也有可能是 chrome 的 bug)
+
+由於事件發生的的順序不同, Firefox 會在最後才觸發 onChange, 但 Chrome 會先觸發 onChange -> compositionupdate -> compositionend
+
+我們在 100 輸入 0 的時候把 **e.target.value(1000)** 變成 1,000 使 input element 的 value 顯示 1,000
+
+我猜 chrome 可能預期 compositionend 的時候 value 應該是 1000, 但其實 input 的 value 已經變成 1,000 了
+
+造成 chrome 的程式碼進入某段 condition 從而沒觸發到 **compositionupdate** 和 **compositionend** 且再次觸發 onChange 才會讓最後多一個 0
+
+所以那個時候我就想說試試看在**組字的途中讓 input 的值都是最原始的**, 這樣 chrome 就不會誤判了, 可以參考以下 codesandbox
+
+<IFrame src={`<iframe src="https://codesandbox.io/embed/composition-succeed-ipvzp9?fontsize=14&hidenavigation=1&theme=dark"
+     style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+     title="composition succeed"
+     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+   ></iframe>`} />
+
+主要就是偵測使用者當下是不是在組字, 觸發 **compositionend** 就代表組字完成
+
+```js
+  const [isComposition, setIsComposition] = useState(false);
+  const handleComposition = (e) => {
+    console.log(e.type, e.target.value);
+    setIsComposition(e.type !== "compositionend");
+  };
+```
+
+如果在 **isComposition** 的情況下, 讓 input 的 value 不要有逗點
+
+```js
+  <input
+    value={isComposition ? value.replace(/,/g, "") : value} // 讓 value 保持不要有逗點
+    onChange={handleChange}
+    onCompositionStart={handleComposition}
+    onCompositionUpdate={handleComposition}
+    onCompositionEnd={handleComposition}
+  />
+```
+
+這樣 chrome 在組字的時候就不會發生**預期 compositionend 的時候 value 應該是 1000, 但其實 input 的 value 已經變成 1,000 的情況**, 從而解決這個 bug
+
+而這個 bug 只會在 chrome 發生, 因為只有 chrome 會在**最後的 compositionupdate & compositionend 前再觸發一次 onChange**
+
+以上是我的假設, 要更清楚的話照理來說應該要去翻 Chrome 和 Firefox 的 source code... 但 root cause 應該是這樣沒錯,
+當初為了解這個 bug 花了一整天.. 之後有空再去嘗試翻翻看瀏覽器對於這部分的實作
+
+
+
+
+
+

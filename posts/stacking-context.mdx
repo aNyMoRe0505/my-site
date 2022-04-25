@@ -19,7 +19,7 @@ date: '2022-04-11'
 
 以下是我從 [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/Stacking_without_z-index) 拿的範例, 可以發現 Element 5 在 html 順序中雖然是在最後面, 但因為它是 **non-positioned** 元素, 所以會被蓋過去
 
-<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking without the z-index MDN" src="https://codepen.io/anymore0505/embed/popKYoP?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+<IFrame src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking without the z-index MDN" src="https://codepen.io/anymore0505/embed/popKYoP?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
   See the Pen <a href="https://codepen.io/anymore0505/pen/popKYoP">
   Stacking without the z-index MDN</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
   on <a href="https://codepen.io">CodePen</a>.
@@ -33,7 +33,7 @@ date: '2022-04-11'
 
 以下也是從 [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/Adding_z-index) 來的
 
-<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking with z-index (from MDN)" src="https://codepen.io/anymore0505/embed/YzYvgBw?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+<IFrame src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking with z-index (from MDN)" src="https://codepen.io/anymore0505/embed/YzYvgBw?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
   See the Pen <a href="https://codepen.io/anymore0505/pen/YzYvgBw">
   Stacking with z-index (from MDN)</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
   on <a href="https://codepen.io">CodePen</a>.
@@ -66,7 +66,7 @@ date: '2022-04-11'
 
 來看看幾個例子, 下面這個也是從 MDN 來的
 
-<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking context from mdn" src="https://codepen.io/anymore0505/embed/popKBVB?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+<IFrame src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking context from mdn" src="https://codepen.io/anymore0505/embed/popKBVB?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
   See the Pen <a href="https://codepen.io/anymore0505/pen/popKBVB">
   Stacking context from mdn</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
   on <a href="https://codepen.io">CodePen</a>.
@@ -77,7 +77,7 @@ DIV3 內的元素排序完成後, 整個 DIV3 才會跟 DIV1, DIV2 去做相對�
 
 如果將 DIV3 的 **z-index** 移除, 也就是說不符合形成 stacking context 的規則的話, 就會變成以下這樣
 
-<Codepen src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking context 2" src="https://codepen.io/anymore0505/embed/xxpzeQE?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+<IFrame src={`<iframe height="500" style="width: 100%;" scrolling="no" title="Stacking context 2" src="https://codepen.io/anymore0505/embed/xxpzeQE?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
   See the Pen <a href="https://codepen.io/anymore0505/pen/xxpzeQE">
   Stacking context 2</a> by Chen Yu Wang (<a href="https://codepen.io/anymore0505">@anymore0505</a>)
   on <a href="https://codepen.io">CodePen</a>.
@@ -87,7 +87,7 @@ DIV3 內的元素排序完成後, 整個 DIV3 才會跟 DIV1, DIV2 去做相對�
 
 再來看相關的例子, 我是從 andyou 的 [blog](https://andyyou.github.io/2016/03/03/z-index/) 中看到的
 
-<Codepen src={`<iframe height="300" style="width: 100%;" scrolling="no" title="Untitled" src="https://codepen.io/andyyou/embed/ZWGvwV?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+<IFrame src={`<iframe height="300" style="width: 100%;" scrolling="no" title="Untitled" src="https://codepen.io/andyyou/embed/ZWGvwV?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
   See the Pen <a href="https://codepen.io/andyyou/pen/ZWGvwV">
   Untitled</a> by andyyou (<a href="https://codepen.io/andyyou">@andyyou</a>)
   on <a href="https://codepen.io">CodePen</a>.
@@ -142,7 +142,7 @@ div
 最後解答是加入一個小於 1 的 opacity 到紅色 span 的爸爸元素即 div, 相信到這裡大家也應該能馬上明白為什麼,
 **opacity < 1** 正是建立 stacking context 中的一個條件
 
-<Codepen src={`<iframe height="300" style="width: 100%;" scrolling="no" title="Untitled" src="https://codepen.io/andyyou/embed/oxXEvx?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+<IFrame src={`<iframe height="300" style="width: 100%;" scrolling="no" title="Untitled" src="https://codepen.io/andyyou/embed/oxXEvx?default-tab=result" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
   See the Pen <a href="https://codepen.io/andyyou/pen/oxXEvx">
   Untitled</a> by andyyou (<a href="https://codepen.io/andyyou">@andyyou</a>)
   on <a href="https://codepen.io">CodePen</a>.
@@ -152,13 +152,3 @@ div
 
 - [Stacking Context](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context)
 - [深入 css z-index 屬性](https://andyyou.github.io/2016/03/03/z-index/)
-
-
-
-
-
-
-
-
-
-

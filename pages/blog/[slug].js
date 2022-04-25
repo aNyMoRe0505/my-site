@@ -11,7 +11,7 @@ import { atomOneDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import styled, { keyframes } from 'styled-components';
 
 import ArticleImage from '@/components/blog/ArticleImage';
-import Codepen from '@/components/blog/Codepen';
+import IFrame from '@/components/blog/IFrame';
 import TableOfContent from '@/components/blog/TableOfContent';
 import { MEDIA_QUERY_MD } from '@/constants/breakpoint';
 
@@ -176,7 +176,7 @@ const Tag = styled.span`
 
 const components = {
   ArticleImage,
-  Codepen,
+  IFrame,
   h1: Title,
   h2: SubTitle,
   p: Paragraph,

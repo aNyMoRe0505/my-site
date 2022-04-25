@@ -14,6 +14,8 @@ const ALL_POSTS = allPostFileName
   })
   .sort((a, b) => +new Date(b.data.date) - +new Date(a.data.date));
 
+// TODO: cache mechanism
+
 export const getPosts = ({
   limit,
   offset = 0,
