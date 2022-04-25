@@ -43,6 +43,11 @@ class MyDocument extends Document {
           <link rel="preconnect" href="https://i.imgur.com" />
           <link rel="preconnect" href="https://codepen.io" />
           <link rel="preconnect" href="https://cpwebassets.codepen.io" />
+          <link rel="preconnect" href="https://codesandbox.io" />
+          <link
+            rel="preconnect"
+            href="https://prod-packager-packages.codesandbox.io"
+          />
           <link
             rel="preload"
             href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Sans:wght@400;700&display=swap"
